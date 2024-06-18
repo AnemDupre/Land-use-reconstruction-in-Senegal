@@ -115,7 +115,7 @@ def load_saved_params_msds(path):
 
 def save_outputs(path_results, seed, crop_df, past_df, crop_subs_df, crop_mark_df, fal_df, un_df, veg_df, intensification_df):
     cur_date = str(date.today()) #fetch current date
-    numb_samples = len(crop_df.index)
+    numb_samples = len(crop_df.columns) -1 #one of the columns coreesponds to the years and not to a simulation
     
     categories = ["crop", "past", "crop_subs", "crop_mark", "fal", "un", "veg", "intensification"]
     list_outputs = [crop_df, past_df, crop_subs_df, crop_mark_df, fal_df, un_df, veg_df, intensification_df]

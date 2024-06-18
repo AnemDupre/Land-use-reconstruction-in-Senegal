@@ -113,15 +113,30 @@ def load_saved_params_msds(path):
 
 
 
-def save_lu(path_results, crop_df, past_df, crop_subs_df, crop_mark_df, fal_df, un_df, veg_df, intensification_df):
+def save_outputs(path_results, seed, crop_df, past_df, crop_subs_df, crop_mark_df, fal_df, un_df, veg_df, intensification_df):
     cur_date = str(date.today()) #fetch current date
+    numb_samples = len(crop_df.index)
     
-    list_outputs = ["crop", "past", "crop_subs", "crop_mark", "fal", "un", "veg", "intensification"]
+    categories = ["crop", "past", "crop_subs", "crop_mark", "fal", "un", "veg", "intensification"]
+    list_outputs = [crop_df, past_df, crop_subs_df, crop_mark_df, fal_df, un_df, veg_df, intensification_df]
     
-    for output_category in list_outputs:
+    for category, output in zip(categories, list_outputs):
         #path name
-        path_2results = path_results + f'{cur_date}_{numb_samples}samples_seed_{seed}_{output_category}.xlsx'
+        path_2results = path_results + f'{cur_date}_{numb_samples}samples_seed_{seed}_{category}.pkl'
+        #saving output
+        output.to_pickle(path_2results)
+
+
+
+def load_saved_outputs(path_results, file_header):
+    categories = ["crop", "past", "crop_subs", "crop_mark", "fal", "un", "veg", "intensification"]
+    list_outputs = []
+    
+    for category in categories:
+        path = path_results + file_header + f"_{category}.pkl"
+        df = pd.read_pickle(path)
+        list_outputs.append(df)
         
-        #saving results
-        df = pd.DataFrame.from_dict(params_list)
-        df.to_excel(path_2results)
+    [crop_df, past_df, crop_subs_df, crop_mark_df, fal_df, un_df, veg_df, intensification_df] = list_outputs
+    
+    return crop_df, past_df, crop_subs_df, crop_mark_df, fal_df, un_df, veg_df, intensification_df

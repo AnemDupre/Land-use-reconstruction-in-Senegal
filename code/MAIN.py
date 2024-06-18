@@ -30,8 +30,8 @@ import save
 
 #%% National scale
 numb_samples = 10
-calculation_done = False
-file = None # path to results if calculation has been done, None otherwise
+calculation_done = True
+header = "2024-06-18_10samples_seed_42" # name with conditions if calculation has been done, format "{yyyy-mm-dd}_{numb_sample}_samples_seed_{seed}", None otherwise
 
 if not(calculation_done):
     inputs_nat = inputs_full_fetch.inputs_full_fetch(path_data, country,
@@ -47,17 +47,15 @@ if not(calculation_done):
 
     #save
     file_params_msd = save.save_sampling(msd_list, params_list, path_results,
-                                         seed, numb_samples)
-    
-    file_lu = save.save_lu(lu_list)
+                                         seed)
+    file_lu = save.save_outputs(path_results, seed, crop_df, past_df, crop_subs_df, crop_mark_df, fal_df, un_df, veg_df, intensification_df)
 
 else :
-    msd_list, params_list = save.load_saved_params_msds(file)
-    #fetch saved data
-
-#put all data in same dataframe
-#save it 
-#fetch it
+    #fetch sampled parameters, model outputs and msds
+    file_params_msds = header + "_params_msds"
+    msd_list, params_list = save.load_saved_params_msds(file_params_msds)
+    lu_list = save.load_saved_outputs(path_results, header)
+    [crop_df, past_df, crop_subs_df, crop_mark_df, fal_df, un_df, veg_df, intensification_df] = lu_list
 
 
 #%% Sampling and calculating

@@ -16,7 +16,8 @@ import openpyxl
 
 
 #functions
-def save_sampling(msd_list, params_list, path_results):
+def save_sampling(msd_list, params_list, path_results,
+                  seed):
     """
     Creates an xlsx file containing the parameter values
     and associated MSDs.
@@ -42,12 +43,11 @@ def save_sampling(msd_list, params_list, path_results):
 
     """
     cur_date = str(date.today()) #fetch current date
+    numb_samples = len(msd_list)
+    
     
     #determining name
-    i=1
-    while exists(path_results + f'{cur_date}params_random_search_0{i}.xlsx'):
-        i+=1
-    path_2results = path_results + f'{cur_date}params_random_search_0{i}.xlsx'
+    path_2results = path_results + f'{cur_date}_{numb_samples}samples_seed_{seed}_params_msds.xlsx'
     
     #saving results
     df = pd.DataFrame.from_dict(params_list)
@@ -67,3 +67,61 @@ def save_sampling(msd_list, params_list, path_results):
     workbook.save(path_2results)
     
     return path_2results
+
+
+
+def load_saved_params_msds(path):
+    """
+    Fetches the data obtained from sampling and 
+    saved in path with the function save_sampling().
+
+    Parameters
+    ----------
+    path : STR PATH OF FILE IN WHICH
+        MSD_LIST AND PARAMS_LIST WILL BE
+        SAVED.
+
+    Returns
+    -------
+    msd_list : LIST OF MSD VALUES OBTAINED
+        BY COMPARING THE OUTPUT OF THE MODEL
+        FOR PARAMETER VALUES AT THE SAME
+        INDEX IN PARAMS_LIST AND FAO LAND 
+        USE DATA.
+    params_list : LIST CONTAINING DICTIONARIES 
+        OF PARAMETER VALUES SAMPLED FOR 
+        PARAMETER OPTIMIZATION.
+
+    """
+    # Load the Excel file
+    file = pd.read_excel(path)
+    
+    # Retrieve params_list_1 from the DataFrame
+    params_list = file.to_dict(orient='records')
+    # Iterate over each dictionary
+    for d in params_list:
+        # Check if the "msd" key exists in the dictionary
+        if "MSD" in d:
+            # Remove the "msd" key and its associated value
+            d.pop("MSD")
+        if 'Unnamed: 0' in d:
+            d.pop("Unnamed: 0")
+    # Retrieve msd_list from the 'MSD' column of the DataFrame
+    msd_list = file['MSD'].tolist()
+    
+    return msd_list, params_list
+
+
+
+def save_lu(path_results, crop_df, past_df, crop_subs_df, crop_mark_df, fal_df, un_df, veg_df, intensification_df):
+    cur_date = str(date.today()) #fetch current date
+    
+    list_outputs = ["crop", "past", "crop_subs", "crop_mark", "fal", "un", "veg", "intensification"]
+    
+    for output_category in list_outputs:
+        #path name
+        path_2results = path_results + f'{cur_date}_{numb_samples}samples_seed_{seed}_{output_category}.xlsx'
+        
+        #saving results
+        df = pd.DataFrame.from_dict(params_list)
+        df.to_excel(path_2results)

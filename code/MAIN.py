@@ -26,6 +26,7 @@ os.chdir(path_code)
 
 import inputs_full_fetch
 import iterate_with_diff_params
+import save
 
 #%% National scale
 numb_samples = 10
@@ -43,6 +44,16 @@ if not(calculation_done):
     
     #calculate msd to FAO land-use data
     msd_list = iterate_with_diff_params.iterate_msd_calc(past_df, crop_subs_df, crop_mark_df, fal_df, veg_df, path_data)
+
+    #save
+    file_params_msd = save.save_sampling(msd_list, params_list, path_results,
+                                         seed, numb_samples)
+    
+    file_lu = save.save_lu(lu_list)
+
+else :
+    msd_list, params_list = save.load_saved_params_msds(file)
+    #fetch saved data
 
 #put all data in same dataframe
 #save it 

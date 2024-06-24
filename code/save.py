@@ -10,14 +10,13 @@ do calculations multiple times.
 
 #imports
 from datetime import date
-from os.path import exists
 import pandas as pd
 import openpyxl
 
 
 #functions
 def save_sampling(msd_list, params_list, path_results,
-                  seed):
+                  seed, modification_marker):
     """
     Creates an xlsx file containing the parameter values
     and associated MSDs.
@@ -47,7 +46,10 @@ def save_sampling(msd_list, params_list, path_results,
     
     
     #determining name
-    path_2results = path_results + f'{cur_date}_{numb_samples}samples_seed_{seed}_params_msds.xlsx'
+    if modification_marker!=None:
+        path_2results = path_results + f'{cur_date}_{numb_samples}samples_seed_{seed}_{modification_marker}_params_msds.xlsx'
+    else:
+        path_2results = path_results + f'{cur_date}_{numb_samples}samples_seed_{seed}_params_msds.xlsx'
     
     #saving results
     df = pd.DataFrame.from_dict(params_list)
@@ -70,7 +72,25 @@ def save_sampling(msd_list, params_list, path_results,
 
 
 
-def load_saved_params_msds(path):
+def save_outputs(path_results, modification_marker, seed, crop_df, past_df, crop_subs_df, crop_mark_df, fal_df, un_df, veg_df, intensification_df):
+    cur_date = str(date.today()) #fetch current date
+    numb_samples = len(crop_df.columns) -1 #one of the columns coreesponds to the years and not to a simulation
+    
+    categories = ["crop", "past", "crop_subs", "crop_mark", "fal", "un", "veg", "intensification"]
+    list_outputs = [crop_df, past_df, crop_subs_df, crop_mark_df, fal_df, un_df, veg_df, intensification_df]
+    
+    for category, output in zip(categories, list_outputs):
+        #path name
+        if modification_marker!=None:
+            path_2results = path_results + f'{cur_date}_{numb_samples}samples_seed_{seed}_{modification_marker}_{category}.pkl'
+        else:
+            path_2results = path_results + f'{cur_date}_{numb_samples}samples_seed_{seed}_{category}.pkl'
+        #saving output
+        output.to_pickle(path_2results)
+
+
+
+def load_saved_params_msds(path_results, header, modification_marker):
     """
     Fetches the data obtained from sampling and 
     saved in path with the function save_sampling().
@@ -93,6 +113,12 @@ def load_saved_params_msds(path):
         PARAMETER OPTIMIZATION.
 
     """
+    if modification_marker!=None:
+        path = path_results + header + "_{modification_marker}_params_msds.xlsx"
+    else:
+        path = path_results + header + "_params_msds.xlsx"
+        
+    
     # Load the Excel file
     file = pd.read_excel(path)
     
@@ -113,27 +139,16 @@ def load_saved_params_msds(path):
 
 
 
-def save_outputs(path_results, seed, crop_df, past_df, crop_subs_df, crop_mark_df, fal_df, un_df, veg_df, intensification_df):
-    cur_date = str(date.today()) #fetch current date
-    numb_samples = len(crop_df.columns) -1 #one of the columns coreesponds to the years and not to a simulation
-    
-    categories = ["crop", "past", "crop_subs", "crop_mark", "fal", "un", "veg", "intensification"]
-    list_outputs = [crop_df, past_df, crop_subs_df, crop_mark_df, fal_df, un_df, veg_df, intensification_df]
-    
-    for category, output in zip(categories, list_outputs):
-        #path name
-        path_2results = path_results + f'{cur_date}_{numb_samples}samples_seed_{seed}_{category}.pkl'
-        #saving output
-        output.to_pickle(path_2results)
-
-
-
-def load_saved_outputs(path_results, file_header):
+def load_saved_outputs(path_results, file_header, modification_marker):
     categories = ["crop", "past", "crop_subs", "crop_mark", "fal", "un", "veg", "intensification"]
     list_outputs = []
     
     for category in categories:
-        path = path_results + file_header + f"_{category}.pkl"
+        if modification_marker!=None:
+            path = path_results + file_header + f"_{modification_marker}_{category}.pkl"
+        else:
+            path = path_results + file_header + f"_{category}.pkl"
+        
         df = pd.read_pickle(path)
         list_outputs.append(df)
         

@@ -24,11 +24,6 @@ def get_regions_coord(file=file):
             region_name = str(feature['properties']['NAME_1'])
             region_coord = feature['geometry']['coordinates']
             
-            # make sure text is lowercase, trimmed string with only alphanumeric characters
-            #region_name = re.sub(r"(\w)([A-Z])", r"\1 \2", region_name).strip().lower()  # split camelcase, afterwards strip and lowercase
-            #region_name = re.sub(r'[^a-z0-9 ]+', '', region_name)  # lower alphanumeric characters only
-            #region_name = re.sub(r'\s+', ' ', region_name)  # remove multiple spaces and put a space in front to be able to find if keyword is at beginning of text
-    
             regions_names.append(region_name)
             regions_coordinates.append(region_coord)
     return regions_names, regions_coordinates
@@ -37,7 +32,7 @@ def get_regions_coord(file=file):
 
 # getting the centroids of pixels in each region
 def all_pixels(pixels_long=4320, pixels_lat=2160,
-               degree_per_pixel=0.0833):
+               degree_per_pixel=0.083333):
     centroids = []
     indices = []
     for pixel_x in range(pixels_long):

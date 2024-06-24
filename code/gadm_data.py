@@ -3,9 +3,7 @@
 Created on Fri Jun 21 14:46:03 2024
 
 @author: anem
-"""
 
-"""
 Extract region from the GeoJSON region files in folder '1'.
 Put them into 'regions' folder with county subfolders with the same name as their region.
 In these subfolders also put a file with the list of regions ('regions.txt').
@@ -64,13 +62,14 @@ for pixel_x in range(4320):
         centroids.append([lat, long])
         pixels.append([lat_pix, long_pix])
 
-polygon = coordinates[3][0][0]
+polygon = coordinates[0][2][0]
 path = mpltPath.Path(polygon)
 inside2 = path.contains_points(centroids)
 print(inside2)
 inside = inside2.tolist()
-indices = inside.index(True)
-centroids[indices]
+indices = find_truth(inside)
+print(indices)
+#centroids[indices]
 
 
 # Using enumerate to Find Index Positions
@@ -81,4 +80,50 @@ def find_truth(list_to_check):
             indices.append(idx)
     return indices
 
-print(find_truth(inside2))
+def coord_inside_region(region_idx, region_polygons, points_to_check):
+    """
+    Find the coordinates of points inside a given region of the world.
+
+    Parameters
+    ----------
+    region_idx : INT
+        Index of the region we want to extract coordinates from.
+    region_polygons : LIST
+        Coordinates of the contours of the regions.
+    points_to_check : LIST
+        [lat, long] coordinates in degrees of points to check if inside region or not.
+
+    Returns
+    -------
+    coord_inside_pix : LIST
+        [lat, long] coordinates of points inside the region in pixels.
+    coord_inside_deg : TYPE
+        [lat, long] coordinates of points inside the region in degrees.
+
+    """
+    
+    coord_inside_pix = [] #coordinates of points inside the region in pixels
+    coord_inside_deg = [] #coordinates of points inside the region in degrees
+    
+    indices_inside_region = []
+    
+    subregions = region_polygons[region_idx]
+    for subregion in subregions:
+        subregion = subregion[0]
+        
+        polygon = subregion
+        path = mpltPath.Path(polygon)
+        inside = path.contains_points(points_to_check)
+        inside = inside.tolist()
+        indices_inside_subregion = find_truth(inside)
+        
+        for indice in indices_inside_subregion:
+            indices_inside_region.append(indice)
+            #coord_inside_pix.append(pixels[indice])
+            #coord_inside_deg.append(centroids[inside])
+    
+    return indices_inside_region
+
+
+coord_inside_region(0, coordinates, centroids)
+        

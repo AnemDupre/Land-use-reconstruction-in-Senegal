@@ -6,7 +6,7 @@ Created on Tue Jun 18 12:36:56 2024
 """
 
 import numpy as np
-import merge
+import core
 import model
 import fetch_fao_land_use
 
@@ -93,14 +93,14 @@ def iterate_simulation_df(params_list, NAT_AREA, inputs):
         intensification_dfs.append(intensification_df)
         
     # Append the final DataFrame to the list
-    crop_values = merge.merge_df(crop_dfs, column="year")  
-    past_values = merge.merge_df(past_dfs, column="year")  
-    crop_subs_values = merge.merge_df(crop_subs_dfs, column="year")  
-    crop_mark_values = merge.merge_df(crop_mark_dfs, column="year")  
-    fal_values = merge.merge_df(fal_dfs, column="year")  
-    un_values = merge.merge_df(un_dfs, column="year")  
-    veg_values = merge.merge_df(veg_dfs, column="year")  
-    intensification_values = merge.merge_df(intensification_dfs, column="year")  
+    crop_values = core.merge_df(crop_dfs, column="year")  
+    past_values = core.merge_df(past_dfs, column="year")  
+    crop_subs_values = core.merge_df(crop_subs_dfs, column="year")  
+    crop_mark_values = core.merge_df(crop_mark_dfs, column="year")  
+    fal_values = core.merge_df(fal_dfs, column="year")  
+    un_values = core.merge_df(un_dfs, column="year")  
+    veg_values = core.merge_df(veg_dfs, column="year")  
+    intensification_values = core.merge_df(intensification_dfs, column="year")  
     
     land_use_list = [crop_values, past_values, crop_subs_values, crop_mark_values, fal_values, un_values, veg_values, intensification_values]
     
@@ -125,25 +125,25 @@ def iterate_msd_calc(past_df, crop_subs_df,
     for sim in range(numb_sim-1):
         #compare with our results
         model_past = past_df.iloc[:,[0, sim+1]].copy()
-        past_compare_df = merge.merge_df([model_past, fao_past], column="year")
+        past_compare_df = core.merge_df([model_past, fao_past], column="year")
         past_compare_df["msd_past"] = (past_compare_df.iloc[:, 1] - past_compare_df["past_fao"])**2
         past_msd = past_compare_df["msd_past"].sum()/len(past_compare_df.index)
         
         model_crop_subs = crop_subs_df.iloc[:,[0, sim+1]].copy()
         model_crop_mark = crop_mark_df.iloc[:,[0, sim+1]].copy()
-        model_crop = merge.merge_df([model_crop_subs, model_crop_mark], column="year")
+        model_crop = core.merge_df([model_crop_subs, model_crop_mark], column="year")
         model_crop["crop_subs_mark"] = model_crop.iloc[:,1] + model_crop.iloc[2]
-        crop_df = merge.merge_df([model_crop, fao_crop], column="year")
+        crop_df = core.merge_df([model_crop, fao_crop], column="year")
         crop_df["msd_crop"] = (crop_df["crop_subs_mark"] - crop_df["crop_fao"])**2
         crop_msd = crop_df["msd_crop"].sum()/len(crop_df.index)
         
         model_fal = fal_df.iloc[:,[0, sim+1]].copy()
-        fal_compare_df = merge.merge_df([model_fal, fao_fal], column="year")
+        fal_compare_df = core.merge_df([model_fal, fao_fal], column="year")
         fal_compare_df["msd_fal"] = (fal_compare_df.iloc[:,1] - fal_compare_df["fal_fao"])**2
         fal_msd = fal_compare_df["msd_fal"].sum()/len(fal_compare_df.index)
            
         model_veg = veg_df.iloc[:,[0, sim+1]].copy()
-        veg_compare_df = merge.merge_df([model_veg, fao_veg], column="year")
+        veg_compare_df = core.merge_df([model_veg, fao_veg], column="year")
         veg_compare_df["msd_veg"] = (veg_compare_df.iloc[:,1] - veg_compare_df["veg_fao"])**2
         veg_msd = veg_compare_df["msd_veg"].sum()/len(veg_compare_df.index)    
         

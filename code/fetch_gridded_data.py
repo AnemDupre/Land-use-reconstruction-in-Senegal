@@ -45,16 +45,19 @@ lists_files = [list_files_2009, list_files_2019]
 years = [2009, 2019]
 
 for year, list_files in zip(years, lists_files):
-    liv = iterate_species(list_files, pixel_indices_in_regions, regions_names)
+    liv_regions = iterate_species(list_files, pixel_indices_in_regions, regions_names)
+    print(liv_regions)
 
 def iterate_species(list_files, pixel_indices_in_regions, regions_names):
-    livetock_species = [] #in order: cattle, goats, horse and sheep
-    for path in list_files:
-        livetock_species.append(get_livestock_regions(path, pixel_indices_in_regions, regions_names))
-    print(livetock_species)
-    liv = input_fetch.calculate_liv(0, livetock_species[0], livetock_species[2], 
-                                    0, livetock_species[1], livetock_species[3])
-    return liv
+    liv_regions = []
+    for r in range(len(regions_names)):
+        livetock_species = [] #in order: cattle, goats, horse and sheep
+        for path in list_files:
+            livetock_species.append(get_livestock_regions(path, pixel_indices_in_regions, regions_names))
+        liv = input_fetch.calculate_liv(0, livetock_species[0][r], livetock_species[2][r], 
+                                        0, livetock_species[1][r], livetock_species[3][r])
+        liv_regions.append(liv)
+    return liv_regions
 
 def get_livestock_regions(path, pixel_indices_in_regions, regions_names):
     im = tifffile.imread(path)

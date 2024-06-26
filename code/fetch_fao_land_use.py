@@ -6,7 +6,7 @@ Created on Tue Jun 18 12:33:34 2024
 """
 
 import pandas as pd
-import merge
+import core
 
 def fetch_temp_and_perm_crop(path):
     # Population data
@@ -18,7 +18,7 @@ def fetch_temp_and_perm_crop(path):
     perm_crop = perm_crop.rename(columns = {'Value':'perm_crop'})
     perm_crop['perm_crop'] = perm_crop['perm_crop'].apply(lambda x: x*1000)
     #we want the population to be in number of inhabitants not in 1000 inhabitants
-    crop_df = merge.merge_df([temp_crop, perm_crop])
+    crop_df = core.merge_df([temp_crop, perm_crop])
     crop_df["crop_fao"] = crop_df["temp_crop"] + crop_df["perm_crop"]
     crop_df = crop_df.rename(columns = {'Year':'year'})
     return crop_df

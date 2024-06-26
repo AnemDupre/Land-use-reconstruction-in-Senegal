@@ -7,7 +7,7 @@ Created on Thu Feb  8 12:44:20 2024
 
 import pandas as pd
 import os.path
-import merge
+import core
 
 
 
@@ -22,7 +22,7 @@ def fetch_pop(path):
     pop_urb['pop_urb'] = pop_urb['pop_urb'].apply(lambda x: x*1000)
     #we want the population to be in number of inhabitants not in 1000 inhabitants
     
-    return merge.merge_df([pop_rur, pop_urb])
+    return core.merge_df([pop_rur, pop_urb])
 
 
 
@@ -83,7 +83,7 @@ def fetch_cereal_net_imp(path):
     exp_cereal_prep = exp_cereal_prep.rename(columns = {'Value':'exp_cereal_prep'})
     
     #creating a dataframe with all extracted components
-    exp_imp = merge.merge_df([imp_cereal, exp_cereal, imp_cereal_prep, exp_cereal_prep])
+    exp_imp = core.merge_df([imp_cereal, exp_cereal, imp_cereal_prep, exp_cereal_prep])
     exp_imp["net_imp"] = (exp_imp["imp_cereal"] + exp_imp["imp_cereal_prep"]) -\
         (exp_imp["exp_cereal"] + exp_imp["exp_cereal_prep"])
 
@@ -167,7 +167,7 @@ def fetch_animals(path):
     sheep = df[df['Item'] == 'Sheep'][["Year", "Value"]]
     sheep = sheep.rename(columns = {'Value':'sheep'})
     
-    animals = merge.merge_df([asses, camels, cattle, goats, horses, sheep])
+    animals = core.merge_df([asses, camels, cattle, goats, horses, sheep])
     animals["liv"] = calculate_liv(camels=animals["camels"],
                                    cattle=animals["cattle"],
                                    horses=animals["horses"],

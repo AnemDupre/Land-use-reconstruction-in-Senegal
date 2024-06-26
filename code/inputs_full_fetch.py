@@ -5,7 +5,7 @@ Created on Tue Jun 18 12:08:48 2024
 @author: anem
 """
 import input_fetch
-import merge
+import core
 
 def inputs_full_fetch(path_to_data, country, NAT_AREA, rain_data_source, 
                       file_pop="pop_rur_pop_urb.xlsx", file_animals="animals.xlsx",
@@ -18,7 +18,7 @@ def inputs_full_fetch(path_to_data, country, NAT_AREA, rain_data_source,
     rain_df = input_fetch.fetch_rain(path_to_data, NAT_AREA, data=rain_data_source)
     cereals_df = input_fetch.fetch_cereal_net_imp(path_cereals)
     yield_df = input_fetch.fetch_crop_yield(path_yield, country)
-    combined_df = merge.merge_df([pop_df, animals_df, rain_df, cereals_df, yield_df])
+    combined_df = core.merge_df([pop_df, animals_df, rain_df, cereals_df, yield_df])
     combined_df = combined_df.rename(columns = {'Year':'year'})
     combined_df = combined_df.dropna() #we only want years for which we have data for all variables
     #input_fetch.add_liv_column(combined_df)

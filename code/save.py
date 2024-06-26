@@ -114,7 +114,7 @@ def load_saved_params_msds(path_results, header, modification_marker):
 
     """
     if modification_marker!=None:
-        path = path_results + header + "_{modification_marker}_params_msds.xlsx"
+        path = path_results + header + f"_{modification_marker}_params_msds.xlsx"
     else:
         path = path_results + header + "_params_msds.xlsx"
         

@@ -26,7 +26,6 @@ os.chdir(path_code)
 
 import inputs_full_fetch
 import iterate_model
-import save
 import plot
 
 #%% National level
@@ -46,14 +45,16 @@ plot.plot_all_lu(lu_list)
 import modulate_inputs
 import iterate_model
 
-changed_inputs = modulate_inputs.change_amplitude(inputs_nat, ["liv"], 0.5)
+changed_inputs = modulate_inputs.change_amplitude(inputs_nat, ["net_imp"], 1.5)
+header = "2024-06-25_1000samples_seed_42"
 
 numb_samples = 1000
 calculation_done = False
 modified_inputs = True
-modification_marker = "liv_0_5" #"{changed input}_{amplitude}" with a _ instead of commas
+modification_marker = "net_imp_1_5" #"{changed input}_{amplitude}" with a _ instead of commas
 
-msd_list_rain0_5, params_list_rain0_5, lu_list_rain0_5 = iterate_model.iterate_model(numb_samples, calculation_done, path_repository, NAT_AREA, seed, changed_inputs, modified_inputs=modified_inputs, modification_marker=modification_marker)
-[crop_df_rain0_5, past_df_rain0_5, crop_subs_df_rain0_5, crop_mark_df_rain0_5, fal_df_rain0_5, un_df_rain0_5, veg_df_rain0_5, intensification_df_rain0_5] = lu_list_rain0_5
-plot.plot_all_lu(lu_list_rain0_5)
+msd_list_modified, params_list_modified, lu_list_modified = iterate_model.iterate_model(numb_samples, calculation_done, path_repository, NAT_AREA, seed, changed_inputs, 
+                                                                                        modified_inputs=modified_inputs, modification_marker=modification_marker, header=header)
+[crop_df_modified, past_df_modified, crop_subs_df_modified, crop_mark_df_modified, fal_df_modified, un_df_modified, veg_df_modified, intensification_df__modified] = lu_list_modified
+plot.plot_all_lu(lu_list_modified)
 #%%regional scale

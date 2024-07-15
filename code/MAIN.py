@@ -57,6 +57,24 @@ msd_list_modified, params_list_modified, lu_list_modified = iterate_model.iterat
 [crop_df_modified, past_df_modified, crop_subs_df_modified, crop_mark_df_modified, fal_df_modified, un_df_modified, veg_df_modified, intensification_df__modified] = lu_list_modified
 plot.plot_all_lu(lu_list_modified)
 
+#%% quantifying sensitivity to inputs
+import sensitivity2inputs
+
+calculation_done = False
+numb_samples = 100
+mult_factor = 1.5 #The amplitude of input modification
+inputs_list = [["rain"], ["net_imp"], ["pop_rur", "pop_urb"], ["net_imp"], ["yield"], ["liv"]]
+
+#non-modified outputs
+params_list, lu_list_original = iterate_model.iterate_nat(numb_samples, calculation_done, path_repository, NAT_AREA, seed, inputs_nat, calculate_msd=False)
+[crop_df, past_df, crop_subs_df, crop_mark_df, fal_df, un_df, veg_df, intensification_df] = lu_list
+
+#calculation for modified inputs and divergence estimation
+for input_name in inputs_list:
+    changed_inputs = modulate_inputs.change_amplitude(inputs_nat, input_name, mult_factor)
+    divergences = sensitivity2inputs.calc_divergence(params_list, NAT_AREA, changed_inputs, lu_list_original)
+    print(divergences[2])
+
 #%%regional scale
 
 superficies, inputs_reg = inputs_full_fetch.reg_inputs_full_fetch(path_data)

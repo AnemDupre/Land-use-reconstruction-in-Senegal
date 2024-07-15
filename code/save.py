@@ -56,10 +56,12 @@ def save_sampling(params_list, path_results,
     df = pd.DataFrame.from_dict(params_list)
     df.to_excel(path_2results)
     
+    
+    #adding msd values
+    column = len(params_list[0].keys())+2 #at which column to put msd values
+    workbook = openpyxl.load_workbook(path_2results)
     if msd_list!=None:
-        #adding msd values
-        column = len(params_list[0].keys())+2 #at which column to put msd values
-        workbook = openpyxl.load_workbook(path_2results)
+
         worksheet = workbook.worksheets[0]
         cell_title = worksheet.cell(row=1, column=column)
         cell_title.value = 'MSD'
@@ -141,7 +143,7 @@ def load_saved_params_msds(path_results, header, modification_marker=None):
     if "msd_list" in locals():
         return msd_list, params_list
     else :
-        return params_list
+        return _ , params_list
 
 
 

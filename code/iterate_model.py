@@ -11,7 +11,8 @@ import save
 def iterate_nat(numb_samples, calculation_done, path_repository, 
                 NAT_AREA, seed, inputs, 
                 modified_inputs=False, modification_marker=None,
-                header=None, country="Senegal"):
+                header=None, country="Senegal",
+                calculate_msd=True):
     #setting path
     if modified_inputs:
         path_results = path_repository + "\\results\\national\\modified_inputs\\"
@@ -27,11 +28,15 @@ def iterate_nat(numb_samples, calculation_done, path_repository,
         lu_list = iterate_functions.iterate_simulation_df(params_list, NAT_AREA, inputs)
         [crop_df, past_df, crop_subs_df, crop_mark_df, fal_df, un_df, veg_df, intensification_df] = lu_list
         
-        #calculate msd to FAO land-use data
-        msd_list = iterate_functions.iterate_msd_calc(past_df, crop_subs_df, crop_mark_df, fal_df, veg_df, path_data)
+        if calculate_msd:
+            #calculate msd to FAO land-use data
+            msd_list = iterate_functions.iterate_msd_calc(past_df, crop_subs_df, crop_mark_df, fal_df, veg_df, path_data)
 
         #save
-        save.save_sampling(params_list, path_results, seed, modification_marker, msd_list=msd_list)
+        if "msd_list" in locals():
+            save.save_sampling(params_list, path_results, seed, modification_marker, msd_list=msd_list)
+        else :
+            save.save_sampling(params_list, path_results, seed, modification_marker)
         save.save_outputs(path_results, seed, 
                           crop_df, past_df, crop_subs_df, crop_mark_df, 
                           fal_df, un_df, veg_df, intensification_df,
@@ -44,7 +49,10 @@ def iterate_nat(numb_samples, calculation_done, path_repository,
         lu_list = save.load_saved_outputs(path_results, header, modification_marker=modification_marker)
         [crop_df, past_df, crop_subs_df, crop_mark_df, fal_df, un_df, veg_df, intensification_df] = lu_list
     
-    return msd_list, params_list, lu_list
+    if calculate_msd:
+        return msd_list, params_list, lu_list
+    else :
+        return params_list, lu_list
 
 
 

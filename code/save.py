@@ -15,8 +15,9 @@ import openpyxl
 
 
 #functions
-def save_sampling(msd_list, params_list, path_results,
-                  seed, modification_marker):
+def save_sampling(params_list, path_results,
+                  seed, modification_marker=None,
+                  msd_list=None):
     """
     Creates an xlsx file containing the parameter values
     and associated MSDs.
@@ -42,7 +43,7 @@ def save_sampling(msd_list, params_list, path_results,
 
     """
     cur_date = str(date.today()) #fetch current date
-    numb_samples = len(msd_list)
+    numb_samples = len(params_list)
     
     
     #determining name
@@ -55,24 +56,26 @@ def save_sampling(msd_list, params_list, path_results,
     df = pd.DataFrame.from_dict(params_list)
     df.to_excel(path_2results)
     
-    #adding msd values
-    column = len(params_list[0].keys())+2 #at which column to put msd values
-    workbook = openpyxl.load_workbook(path_2results)
-    worksheet = workbook.worksheets[0]
-    cell_title = worksheet.cell(row=1, column=column)
-    cell_title.value = 'MSD'
-    y=2
-    for x in range(len(msd_list)):
-        cell_to_write = worksheet.cell(row=y, column=column)
-        cell_to_write.value = msd_list[x]
-        y += 1
+    if msd_list!=None:
+        #adding msd values
+        column = len(params_list[0].keys())+2 #at which column to put msd values
+        workbook = openpyxl.load_workbook(path_2results)
+        worksheet = workbook.worksheets[0]
+        cell_title = worksheet.cell(row=1, column=column)
+        cell_title.value = 'MSD'
+        y=2
+        for x in range(len(msd_list)):
+            cell_to_write = worksheet.cell(row=y, column=column)
+            cell_to_write.value = msd_list[x]
+            y += 1
     workbook.save(path_2results)
     
     return path_2results
 
 
 
-def save_outputs(path_results, modification_marker, seed, crop_df, past_df, crop_subs_df, crop_mark_df, fal_df, un_df, veg_df, intensification_df):
+def save_outputs(path_results, seed, crop_df, past_df, crop_subs_df, crop_mark_df, fal_df, un_df, veg_df, intensification_df,
+                 modification_marker=None):
     cur_date = str(date.today()) #fetch current date
     numb_samples = len(crop_df.columns) -1 #one of the columns coreesponds to the years and not to a simulation
     
@@ -90,7 +93,7 @@ def save_outputs(path_results, modification_marker, seed, crop_df, past_df, crop
 
 
 
-def load_saved_params_msds(path_results, header, modification_marker):
+def load_saved_params_msds(path_results, header, modification_marker=None):
     """
     Fetches the data obtained from sampling and 
     saved in path with the function save_sampling().
@@ -117,12 +120,11 @@ def load_saved_params_msds(path_results, header, modification_marker):
         path = path_results + header + f"_{modification_marker}_params_msds.xlsx"
     else:
         path = path_results + header + "_params_msds.xlsx"
-        
     
     # Load the Excel file
     file = pd.read_excel(path)
     
-    # Retrieve params_list_1 from the DataFrame
+    # Retrieve params_list from the DataFrame
     params_list = file.to_dict(orient='records')
     # Iterate over each dictionary
     for d in params_list:
@@ -132,14 +134,18 @@ def load_saved_params_msds(path_results, header, modification_marker):
             d.pop("MSD")
         if 'Unnamed: 0' in d:
             d.pop("Unnamed: 0")
-    # Retrieve msd_list from the 'MSD' column of the DataFrame
-    msd_list = file['MSD'].tolist()
+    if "MSD" in file.columns:
+        # Retrieve msd_list from the 'MSD' column of the DataFrame
+        msd_list = file['MSD'].tolist()
     
-    return msd_list, params_list
+    if "msd_list" in locals():
+        return msd_list, params_list
+    else :
+        return params_list
 
 
 
-def load_saved_outputs(path_results, file_header, modification_marker):
+def load_saved_outputs(path_results, file_header, modification_marker=None):
     categories = ["crop", "past", "crop_subs", "crop_mark", "fal", "un", "veg", "intensification"]
     list_outputs = []
     

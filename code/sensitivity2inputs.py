@@ -6,22 +6,25 @@ Created on Mon Jul 15 11:40:04 2024
 """
 
 import iterate_functions
-
+import pandas as pd
 
 
 def calc_divergence(params_list, NAT_AREA, 
                     inputs_modified, lu_list_original):
     lu_list_modified = iterate_functions.iterate_simulation_df(params_list, NAT_AREA, inputs_modified)
-    [crop_df, past_df, crop_subs_df, crop_mark_df, fal_df, un_df, veg_df, intensification_df] = lu_list_modified
-    div_list = []
+    output_names = ["past", "crop_subs", "crop_mark", 
+                    "fal", "un", "veg"]
+    div_list = {}
 
-    for output_modified, output_original in zip(lu_list_modified[:-1], lu_list_original[:-1]):
+    for output_name, output_modified, output_original in zip(output_names, lu_list_modified[1:-1], lu_list_original[1:-1]):
         divergence = output_original.subtract(output_modified)
         divergence = divergence.apply(lambda x: x ** 2)
-        divergence = divergence.sum(axis=1)
-        #divergence = divergence.sum()
-        div_list.append(divergence)
-    
+        divergence = divergence.sum(axis=0).to_list()
+        print(divergence)
+
+
+        div_list[output_name] = divergence
+    div_list = pd.DataFrame(div_list)
     return div_list
     
 

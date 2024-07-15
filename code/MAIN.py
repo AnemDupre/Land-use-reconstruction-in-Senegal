@@ -59,21 +59,73 @@ plot.plot_all_lu(lu_list_modified)
 
 #%% quantifying sensitivity to inputs
 import sensitivity2inputs
+import matplotlib.pyplot as plt
 
 calculation_done = False
 numb_samples = 100
-mult_factor = 1.5 #The amplitude of input modification
+mult_factor = [0.5, 1.5] #The amplitude of input modification
 inputs_list = [["rain"], ["net_imp"], ["pop_rur", "pop_urb"], ["net_imp"], ["yield"], ["liv"]]
 
 #non-modified outputs
 params_list, lu_list_original = iterate_model.iterate_nat(numb_samples, calculation_done, path_repository, NAT_AREA, seed, inputs_nat, calculate_msd=False)
 [crop_df, past_df, crop_subs_df, crop_mark_df, fal_df, un_df, veg_df, intensification_df] = lu_list
 
-#calculation for modified inputs and divergence estimation
-for input_name in inputs_list:
-    changed_inputs = modulate_inputs.change_amplitude(inputs_nat, input_name, mult_factor)
-    divergences = sensitivity2inputs.calc_divergence(params_list, NAT_AREA, changed_inputs, lu_list_original)
-    print(divergences[2])
+x_labels = ["past", "crop_subs", "crop_mark", 
+            "fal", "un", "veg"]
+x_locations = [0, 1, 2, 3, 4, 5]
+
+divergences_dic = {}
+
+for k in mult_factor:
+    #calculation for modified inputs and divergence estimation
+    for input_name in inputs_list:
+        fig, ax = plt.subplots()
+        changed_inputs = modulate_inputs.change_amplitude(inputs_nat, input_name, k)
+        divergences = sensitivity2inputs.calc_divergence(params_list, NAT_AREA, changed_inputs, lu_list_original)
+        
+        divergences_dic[f"{input_name}_{k}"] = divergences
+        # for series, x in zip(divergences, x_locations):
+        #     plt.scatter([x]*len(series.to_list()), 
+        #                 series.to_list())
+        
+        # fig.set_dpi(600)
+        # ax.set_xticks(x_locations,
+        #               x_labels)
+        # plt.title(f"{input_name}_at_{mult_factor}")
+        # plt.show()
+        # plt.close()
+
+for output in x_labels:
+    fig, ax = plt.subplots()
+    for i, key in enumerate(divergences_dic.keys()):
+        plt.scatter([i]*len(divergences_dic[key].index), 
+                    divergences_dic[key][output])
+    plt.title(output)
+    ax.set_xticks(range(len(divergences_dic.keys())),
+                  divergences_dic.keys())
+    plt.xticks(rotation=90)
+    plt.show()
+    plt.close()
+
+divergences_sum_output = {}
+for i, key in enumerate(divergences_dic.keys()):
+    divergences_sum_output[key] = divergences_dic[key].sum(axis=1)
+# sorting the dictionary for proper vizualization
+divergences_sum_output = dict(sorted(divergences_sum_output.items()))
+
+fig, ax = plt.subplots()
+for i, key in enumerate(divergences_sum_output.keys()):
+    plt.scatter([i]*len(divergences_sum_output[key].index), 
+                divergences_sum_output[key])
+    plt.boxplot(divergences_sum_output[key], positions=[i])
+plt.title("squared distance all outputs")
+ax.set_xticks(range(len(divergences_sum_output.keys())),
+              divergences_sum_output.keys())
+plt.xticks(rotation=90)
+yinf = ax.get_ylim()[0]
+ax.set_ylim(yinf, 0.45e16)
+plt.show()
+plt.close()
 
 #%%regional scale
 

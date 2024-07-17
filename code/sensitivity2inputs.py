@@ -49,7 +49,9 @@ def calculate_modified_outputs(mult_factor_list, inputs_list, inputs_nat,
             
             divergences_dic[f"{input_name}_{mult_factor}"] = divergences
             lu_modified_dic[f"{input_name}_{mult_factor}"] = lu_list_modified
-            
+    # sorting the dictionary for proper vizualization
+    divergences_dic = dict(sorted(divergences_dic.items()))
+        
     return lu_modified_dic, divergences_dic
 
 
@@ -77,9 +79,7 @@ def plot_msd_all_outputs(divergences_dic):
     divergences_sum_output = {}
     for i, key in enumerate(divergences_dic.keys()):
         divergences_sum_output[key] = divergences_dic[key].sum(axis=1)
-    # sorting the dictionary for proper vizualization
-    divergences_sum_output = dict(sorted(divergences_sum_output.items()))
-    
+
     fig, ax = plt.subplots()
     for i, key in enumerate(divergences_sum_output.keys()):
         plt.scatter([i]*len(divergences_sum_output[key].index), 
@@ -98,7 +98,7 @@ def plot_msd_all_outputs(divergences_dic):
 
 def plot_lu_comparaison(lu_list_original, lu_list_modified, key, path_results=None):
     
-    categories = ["crop", "past", "crop_subs", "crop_mark",
+    categories = ["past", "crop_subs", "crop_mark",
                   "fal", "un", "veg"]
     
     ranges = [[0, 1.5*10**7],
@@ -111,8 +111,14 @@ def plot_lu_comparaison(lu_list_original, lu_list_modified, key, path_results=No
         ]
     
     medianprops = dict(linewidth=3, color='r')#, markeredgecolor='red')
-    
-    for c, (values_original, values_modified) in enumerate(zip(lu_list_original[:7], lu_list_modified[:7])):
+
+    fig, axes = plt.subplots(nrows=3, ncols=2, figsize=(2*9,3*8))
+    for c, (values_original, values_modified) in enumerate(zip(lu_list_original[1:7], lu_list_modified[1:7])):
+        if c<3:
+            ax = axes[c][0]
+        else:
+            ax = axes[c-3][1]
+        
         #formatting our dataframes
         lu_original = values_original.copy()
         lu_original.reset_index(inplace=True)
@@ -132,7 +138,7 @@ def plot_lu_comparaison(lu_list_original, lu_list_modified, key, path_results=No
             lu_modified.rename({column: f'{count}'})
             #plt.plot(year, lu_original.iloc[:, count])
         
-        fig, ax = plt.subplots(figsize =(9, 4))
+        
         for i, y in enumerate(year) :
             if i!=0:
                 series_or = lu_original.iloc[i]
@@ -150,24 +156,26 @@ def plot_lu_comparaison(lu_list_original, lu_list_modified, key, path_results=No
                            medianprops=medianprops)
                 #ax.scatter([y]*len(series), series)
 
-        if c==0:
-            ax.scatter([1975, 2000, 2013], [3260000, 3290000, 4110000], 
-                       color="b", label="cropland values from litterature")
-        ax.set_ylim(ranges[c])
+        #if c==0:
+            #ax.scatter([1975, 2000, 2013], [3260000, 3290000, 4110000], 
+                       #color="b", label="cropland values from litterature")
+        #ax.set_ylim(ranges[c])
         
         #changing ticks
         ticks = ax.get_xticks()
-        new_ticks = np.delete(ticks, np.where(ticks%2 == 1 or ))
-        ax.set_xticks(new_ticks)
+        new_ticks = np.delete(ticks, np.where(ticks%2 == 1))
+        new_ticks = np.delete(new_ticks, np.where(new_ticks%1 != 0))
+        ax.set_xticks(new_ticks, new_ticks, rotation=30)
         
         ax.set_xlabel('Year')
         ax.set_ylabel(f'{categories[c]} (ha)')
 
-        fig.set_dpi(600)
-        plt.xticks(rotation=30)
+        #plt.xticks(rotation=30)
         if path_results!=None:
             save_path = path_results + categories[c] + "no_scatter.svg"
             fig.savefig(save_path, bbox_inches='tight', format='svg')
         #♥ax.set_xlim([year[0], year[-1]])
-        plt.title(key)
-        plt.show()
+    
+    fig.set_dpi(600)
+    plt.title(key)
+    plt.show()

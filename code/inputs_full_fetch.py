@@ -31,21 +31,23 @@ def nat_inputs_full_fetch(path_to_data, country, NAT_AREA, rain_data_source,
 
 def reg_inputs_full_fetch(path_to_data):
     path_to_data+="inputs\\"
-    dic_dfs = {}
+    
     
     superficies = {"Diourbel": 482400,
                    "Fatick": 684900,
                    "Kaffrine_Kaolack": 1661900,
                    "Thies": 667000} # region surface in ha
     
-    path_precessed_data = path_to_data + "full_reg_data.xlsx"
-    xls = pd.ExcelFile(path_precessed_data)
-    #biomass = path_to_data +
+    #fetching yield and biom_prod
+    dic_yield_biom_prod = input_fetch.fetch_simulated_yield_biom_prod(path_to_data)
+    #fetching the rest of data
+    dic_rest = input_fetch.fetch_other_reg_data(path_to_data)
     
-    for region in superficies.keys():
-        df_region = pd.read_excel(xls, region)
-        df_region.dropna(how='any')
-        dic_dfs[region] = df_region
+    #merge
+    dic_dfs = {}
+    for key in superficies.keys():
+        dic_dfs[key] = core.merge_df([dic_yield_biom_prod[key],
+                                      dic_rest[key]], column="year")
     
     return superficies, dic_dfs
     

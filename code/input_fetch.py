@@ -175,3 +175,63 @@ def fetch_animals(path):
                                    goats=animals["goats"],
                                    sheep=animals["sheep"])
     return animals
+
+
+
+def fetch_simulated_yield_biom_prod(path_data):
+    
+    sheets = ["Herbe", "Mil fruit", "Arachide fruit"]
+    
+    dic_sheets = {}
+    
+    for sheet in sheets:
+        regional_yield = pd.read_excel(path_data + "regional_yield.xlsx", sheet)
+        regional_yield.dropna(how='any')
+        
+        #format the year column
+        regional_yield['Var1'] = regional_yield['Var1'].apply(lambda x: x.year)
+        regional_yield.rename(columns={'Var1': 'year'}, inplace=True)
+        
+        #convert tons/ha to kg per ha
+        for column in regional_yield.columns[1:]: #all columns except year
+            regional_yield[column] = regional_yield[column].apply(lambda x: x*1000)
+        
+        dic_sheets[sheet] = regional_yield
+    
+    # Extracting data for each region
+    #Diourbel
+    df_diourbel = dic_sheets["Herbe"][["year", "DIOURBEL"]].copy()
+    df_diourbel.rename(columns={'DIOURBEL': 'biom_prod'}, inplace=True)
+    df_diourbel["yield"] = dic_sheets["Mil fruit"]["DIOURBEL"].copy()
+    #Fatick
+    df_fatick = dic_sheets["Herbe"][["year", "KAOLACK"]].copy()
+    df_fatick.rename(columns={'KAOLACK': 'biom_prod'}, inplace=True)
+    df_fatick["yield"] = dic_sheets["Mil fruit"]["KAOLACK"].copy()
+    #Kaffrine and Kaolack
+    df_kaffrine_kaolack = pd.DataFrame({"year": dic_sheets["Herbe"]["year"].copy()})
+    df_kaffrine_kaolack["biom_prod"] = dic_sheets["Herbe"]["KOUNGHEUL"] + dic_sheets["Herbe"]["KAOLACK"]
+    df_kaffrine_kaolack["biom_prod"] = df_kaffrine_kaolack["biom_prod"].div(2)
+    df_kaffrine_kaolack["yield"] = dic_sheets["Mil fruit"]["KOUNGHEUL"] + dic_sheets["Mil fruit"]["KAOLACK"]
+    df_kaffrine_kaolack["yield"] = df_kaffrine_kaolack["yield"].div(2)
+    #Thies
+    df_thies = dic_sheets["Herbe"][["year", "DAKAR"]].copy()
+    df_thies.rename(columns={'DAKAR': 'biom_prod'}, inplace=True)
+    df_thies["yield"] = dic_sheets["Mil fruit"]["DAKAR"].copy()
+        
+    dic_yield_biom_prod = {"Diourbel": df_diourbel,
+                           "Fatick": df_fatick,
+                           "Kaffrine_Kaolack": df_kaffrine_kaolack,
+                           "Thies": df_thies}
+    
+    return dic_yield_biom_prod
+
+def fetch_other_reg_data(path_to_data, regions=["Diourbel", "Fatick", "Kaffrine_Kaolack", "Thies"]):
+    dic_other = {}
+    path_precessed_data = path_to_data + "full_reg_data.xlsx"
+    xls = pd.ExcelFile(path_precessed_data)
+    for region in regions:
+        df_region = pd.read_excel(xls, region)
+        df_region.dropna(how='any')
+        dic_other[region] = df_region
+    
+    return dic_other

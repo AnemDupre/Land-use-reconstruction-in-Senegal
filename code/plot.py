@@ -66,3 +66,68 @@ def plot_all_lu(list_lu_values, path_results=None):
             fig.savefig(save_path, bbox_inches='tight', format='svg')
         #♥ax.set_xlim([year[0], year[-1]])
         plt.show()
+
+
+
+def plot_reg_lu(lu_list, region, region_surface, path_results=None):
+    
+    categories = ["past", "crop_subs", "crop_mark",
+                  "fal", "un", "veg"]
+        
+    medianprops = dict(linewidth=3, color='r')#, markeredgecolor='red')
+
+    fig, axes = plt.subplots(nrows=3, ncols=2, figsize=(2*9,3*8))
+    plt.title(region)
+    for c, values in enumerate(lu_list[1:7]):
+        if c<3:
+            ax = axes[c][0]
+        else:
+            ax = axes[c-3][1]
+        
+        #formatting our dataframes
+        lu_original = values.copy()
+        lu_original.reset_index(inplace=True)
+        lu_original.set_index('year', inplace=True)
+        lu_original.drop("index", axis=1, inplace=True)
+        
+        year = list(set(lu_original.index[:]))
+        
+        for count, column in enumerate(lu_original.columns[:]):
+            
+            lu_original.rename({column: f'{count}'})
+            #plt.plot(year, lu_original.iloc[:, count])
+        
+        
+        for i, y in enumerate(year) :
+            if i!=0:
+                series_or = lu_original.iloc[i]
+                ax.boxplot(series_or, positions=[y],
+                           showfliers=False,
+                           #showmeans=True,
+                           medianprops=medianprops)
+                
+                #ax.scatter([y]*len(series), series)
+
+        #if c==0:
+            #ax.scatter([1975, 2000, 2013], [3260000, 3290000, 4110000], 
+                       #color="b", label="cropland values from litterature")
+        #ax.set_ylim(ranges[c])
+        
+        #changing ticks
+        ticks = ax.get_xticks()
+        new_ticks = np.delete(ticks, np.where(ticks%2 == 1))
+        new_ticks = np.delete(new_ticks, np.where(new_ticks%1 != 0))
+        ax.set_xticks(new_ticks, new_ticks, rotation=30)
+        
+        ax.set_xlabel('Year')
+        ax.set_ylabel(f'{categories[c]} (ha)')
+
+        #plt.xticks(rotation=30)
+        if path_results!=None:
+            save_path = path_results + categories[c] + "no_scatter.svg"
+            fig.savefig(save_path, bbox_inches='tight', format='svg')
+    
+    fig.set_dpi(600)
+    
+    plt.show()
+

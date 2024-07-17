@@ -65,14 +65,17 @@ numb_samples = 100
 mult_factor_list = [0.5, 1.5] #The amplitude of input modification
 inputs_list = [["rain"], ["net_imp"], ["pop_rur", "pop_urb"], ["net_imp"], ["yield"], ["liv"]]
 
+rain_data2use = "era_wb"
 inputs_nat = inputs_full_fetch.nat_inputs_full_fetch(path_data, country,
                                                      NAT_AREA, rain_data2use)
 
-#non-modified outputs
+#calculating for non-modified inputs
 params_list, lu_list_original = iterate_model.iterate_nat(numb_samples, calculation_done, path_repository, NAT_AREA, seed, inputs_nat, calculate_msd=False)
-
+#calclating for modified inputs 
 lu_modified_dic, divergences_dic = sensitivity2inputs.calculate_modified_outputs(mult_factor_list, inputs_list, inputs_nat,
                                                                                   params_list, NAT_AREA, lu_list_original)
+
+
 sensitivity2inputs.plot_msd_per_output(divergences_dic)
 
 sensitivity2inputs.plot_msd_all_outputs(divergences_dic)
@@ -82,14 +85,16 @@ for key in lu_modified_dic.keys():
     sensitivity2inputs.plot_lu_comparaison(lu_list_original, lu_list_modified, key)
 
 #%%regional scale
-
-superficies, inputs_reg = inputs_full_fetch.reg_inputs_full_fetch(path_data)
+import plot
+superficies, inputs_reg_dic = inputs_full_fetch.reg_inputs_full_fetch(path_data)
 header = None
-numb_samples = 1000
+numb_samples = 10
 calculation_done = False
 
-for region in superficies.keys():
+for region in ["Diourbel"]:#superficies.keys():
+    inputs_reg = inputs_reg_dic[region]
     params_list, lu_list = iterate_model.iterate_reg(numb_samples, calculation_done, path_repository, superficies[region], seed, inputs_reg, header=header)
     
     # Plotting lu and validation
-    plot.plot_all_lu(lu_list)
+    #plot.plot_all_lu(lu_list)
+    plot.plot_reg_lu(lu_list, region, superficies[region], path_results=None)

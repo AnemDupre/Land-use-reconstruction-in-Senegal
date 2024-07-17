@@ -152,7 +152,10 @@ class LandUseCalculator:
         self.cer_imp = exogenous["net_imp"] #cereal imports in kg
         self.liv = exogenous["liv"] #livestock population in equivalent TLU
         self.crop_yield = exogenous["yield"] #crop yield [crop_yield]=kg/ha
-        self.biom_prod = self.b_biom_prod +self.a_biom_prod*self.rain #biomass productivity per year [biom_prod]=tonnes/ha  
+        if "biom_prod" in exogenous:
+            self.biom_prod = exogenous["biom_prod"]
+        else:
+            self.biom_prod = self.b_biom_prod +self.a_biom_prod*self.rain #biomass productivity per year [biom_prod]=tonnes/ha  
         
         #initializing land demand  (we only need to calculate crop_d and past_d for initialization)
         self.veg_d = 0 #demand for land destined to fuelwood extraction in ha
@@ -216,7 +219,10 @@ class LandUseCalculator:
         self.liv = exogenous["liv"]
         self.crop_yield = exogenous["yield"]
         #○self.crop_yield = 0.91 * exogenous["rain"]
-        self.biom_prod = self.b_biom_prod + self.a_biom_prod*self.rain #biomass productivity per year [biom_prod]=tonnes/ha    
+        if "biom_prod" in exogenous:
+            self.biom_prod = exogenous["biom_prod"]
+        else:
+            self.biom_prod = self.b_biom_prod + self.a_biom_prod*self.rain #biomass productivity per year [biom_prod]=tonnes/ha    
         
         #calculation
         self.veg_d = (self.pop_rur*self.FUEL_CONSO_RUR + self.pop_urb*self.FUEL_CONSO_URB)/self.VEG_PROD

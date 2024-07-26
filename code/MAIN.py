@@ -121,11 +121,12 @@ scale = "groundnut_bassin"
 #combined_tappan_data = fetch_tappan.fetch_tappan('groundnut_bassin', superficies=superficies)
 superficy, groundnutbassin_inputs = inputs_full_fetch.combined_reg_full_fetch(path_data)
 header = None
-numb_samples = 1000
+numb_samples = 100
 calculation_done = False
 
 #get rid of the biom_prod column
-groundnutbassin_inputs.drop("biom_prod", axis=1, inplace=True)
+#groundnutbassin_inputs.drop("biom_prod", axis=1, inplace=True)
+#groundnutbassin_inputs["yield"] = groundnutbassin_inputs["yield"].apply(lambda x : x*1000)
 
 params_list, lu_list = iterate_model.iterate_reg(numb_samples, calculation_done, 
                                                  path_repository, superficy, seed, 

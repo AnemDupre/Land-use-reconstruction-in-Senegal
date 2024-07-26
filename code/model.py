@@ -237,8 +237,8 @@ class LandUseCalculator:
             #using delta fal
             max_past = self.liv*self.BIOM_CONSO_MAX/self.biom_prod
             
-            self.prev_fal = (self.crop_subs +self.crop_mark)*self.CF_INIT - ((self.crop_subs +self.crop_mark)*self.CF_INIT - self.prev_fal + self.land_d_no_fal-self.prev_un)*(1-self.crop_past_ratio)
-            #self.prev_fal += ((self.crop_subs +self.crop_mark) - (self.prev_crop_subs + self.prev_crop_mark))*self.CF_INIT - (self.land_d_no_fal-self.prev_un)*(1-self.crop_past_ratio)
+            #self.prev_fal = (self.crop_subs +self.crop_mark)*self.CF_INIT - ((self.crop_subs +self.crop_mark)*self.CF_INIT - self.prev_fal + self.land_d_no_fal-self.prev_un)*(1-self.crop_past_ratio)
+            self.prev_fal += ((self.crop_subs +self.crop_mark) - (self.prev_crop_subs + self.prev_crop_mark))*self.CF_INIT - (self.fal_d - self.prev_fal + self.land_d_no_fal-self.prev_un)*(1-self.crop_past_ratio)
             self.prev_fal = max(self.prev_fal, self.NAT_AREA - self.prev_veg - self.crop_subs - self.crop_mark - max_past, 0) #fal can't be negative
             self.prev_fal = min((self.crop_subs +self.crop_mark)*self.CF_INIT, self.prev_fal) #fal can't be bigger than CF_init * (crop_mark + crop_subs)
             

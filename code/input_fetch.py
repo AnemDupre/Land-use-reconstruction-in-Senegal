@@ -192,9 +192,10 @@ def fetch_simulated_yield_biom_prod(path_data):
         regional_yield['Var1'] = regional_yield['Var1'].apply(lambda x: x.year)
         regional_yield.rename(columns={'Var1': 'year'}, inplace=True)
         
-        # #convert tons/ha to kg per ha
-        # for column in regional_yield.columns[1:]: #all columns except year
-        #     regional_yield[column] = regional_yield[column].apply(lambda x: x*1000)
+        if sheet == "Mil fruit":
+            #convert tons/ha to kg per ha
+            for column in regional_yield.columns[1:]: #all columns except year
+                    regional_yield[column] = regional_yield[column].apply(lambda x: x*1000)
         
         dic_sheets[sheet] = regional_yield
     

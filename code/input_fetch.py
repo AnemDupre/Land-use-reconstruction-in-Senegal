@@ -192,9 +192,9 @@ def fetch_simulated_yield_biom_prod(path_data):
         regional_yield['Var1'] = regional_yield['Var1'].apply(lambda x: x.year)
         regional_yield.rename(columns={'Var1': 'year'}, inplace=True)
         
-        #convert tons/ha to kg per ha
-        for column in regional_yield.columns[1:]: #all columns except year
-            regional_yield[column] = regional_yield[column].apply(lambda x: x*1000)
+        # #convert tons/ha to kg per ha
+        # for column in regional_yield.columns[1:]: #all columns except year
+        #     regional_yield[column] = regional_yield[column].apply(lambda x: x*1000)
         
         dic_sheets[sheet] = regional_yield
     
@@ -225,10 +225,11 @@ def fetch_simulated_yield_biom_prod(path_data):
     
     return dic_yield_biom_prod
 
+
+
 def fetch_other_reg_data(path_to_data, regions=["Diourbel", "Fatick", "Kaffrine_Kaolack", "Thies"]):
     dic_other = {}
-    path_precessed_data = path_to_data + "full_reg_data.xlsx"
-    xls = pd.ExcelFile(path_precessed_data)
+    xls = pd.ExcelFile(path_to_data)
     for region in regions:
         df_region = pd.read_excel(xls, region)
         df_region.dropna(how='any')

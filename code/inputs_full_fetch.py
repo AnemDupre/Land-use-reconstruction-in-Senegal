@@ -7,6 +7,9 @@ Created on Tue Jun 18 12:08:48 2024
 import input_fetch
 import core
 import pandas as pd
+from functools import reduce
+
+
 
 def nat_inputs_full_fetch(path_to_data, country, NAT_AREA, rain_data_source, 
                       file_pop="pop_rur_pop_urb.xlsx", file_animals="animals.xlsx",
@@ -41,7 +44,7 @@ def reg_inputs_full_fetch(path_to_data):
     #fetching yield and biom_prod
     dic_yield_biom_prod = input_fetch.fetch_simulated_yield_biom_prod(path_to_data)
     #fetching the rest of data
-    dic_rest = input_fetch.fetch_other_reg_data(path_to_data)
+    dic_rest = input_fetch.fetch_other_reg_data(path_to_data + "full_reg_data.xlsx")
     
     #merge
     dic_dfs = {}
@@ -50,7 +53,24 @@ def reg_inputs_full_fetch(path_to_data):
                                       dic_rest[key]], column="year")
     
     return superficies, dic_dfs
+
+
+
+def combined_reg_full_fetch(path_to_data):
+    superficies, inputs_reg_dic = reg_inputs_full_fetch(path_to_data)
     
+    combined_df = pd.DataFrame(columns=list(inputs_reg_dic["Diourbel"].columns))
     
+    for column in combined_df.columns : 
+        if column in ['pop_rur', 'pop_urb', 'net_imp', 'liv']: # extensive variables
+            combined_df[column] = reduce(lambda a, b: a.add(b, fill_value=0), 
+                              [inputs_reg_dic[region][column] for region in superficies.keys()])
+            
+        elif column in ["yield", "rain", "biom_prod"]: # intensive variables
+            combined_df[column] = reduce(lambda a, b: a.add(b, fill_value=0), 
+                              [inputs_reg_dic[region][column] for region in superficies.keys()])
+            combined_df[column] = combined_df[column].div(len(superficies.keys()))
+            
+    combined_df["year"] = inputs_reg_dic["Diourbel"]["year"]
     
-    
+    return sum(superficies.values()), combined_df

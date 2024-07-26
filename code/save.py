@@ -16,7 +16,7 @@ import openpyxl
 
 #functions
 def save_sampling(params_list, path_results,
-                  seed, modification_marker=None,
+                  seed, scale, modification_marker=None,
                   msd_list=None):
     """
     Creates an xlsx file containing the parameter values
@@ -48,9 +48,9 @@ def save_sampling(params_list, path_results,
     
     #determining name
     if modification_marker!=None:
-        path_2results = path_results + f'{cur_date}_{numb_samples}samples_seed_{seed}_{modification_marker}_params_msds.xlsx'
+        path_2results = path_results + f'{scale}_{cur_date}_{numb_samples}samples_seed_{seed}_{modification_marker}_params_msds.xlsx'
     else:
-        path_2results = path_results + f'{cur_date}_{numb_samples}samples_seed_{seed}_params_msds.xlsx'
+        path_2results = path_results + f'{scale}_{cur_date}_{numb_samples}samples_seed_{seed}_params_msds.xlsx'
     
     #saving results
     df = pd.DataFrame.from_dict(params_list)
@@ -76,7 +76,7 @@ def save_sampling(params_list, path_results,
 
 
 
-def save_outputs(path_results, seed, crop_df, past_df, crop_subs_df, crop_mark_df, fal_df, un_df, veg_df, intensification_df,
+def save_outputs(path_results, seed, scale, crop_df, past_df, crop_subs_df, crop_mark_df, fal_df, un_df, veg_df, intensification_df,
                  modification_marker=None):
     cur_date = str(date.today()) #fetch current date
     numb_samples = len(crop_df.columns) -1 #one of the columns coreesponds to the years and not to a simulation
@@ -87,9 +87,9 @@ def save_outputs(path_results, seed, crop_df, past_df, crop_subs_df, crop_mark_d
     for category, output in zip(categories, list_outputs):
         #path name
         if modification_marker!=None:
-            path_2results = path_results + f'{cur_date}_{numb_samples}samples_seed_{seed}_{modification_marker}_{category}.pkl'
+            path_2results = path_results + f'{scale}_{cur_date}_{numb_samples}samples_seed_{seed}_{modification_marker}_{category}.pkl'
         else:
-            path_2results = path_results + f'{cur_date}_{numb_samples}samples_seed_{seed}_{category}.pkl'
+            path_2results = path_results + f'{scale}_{cur_date}_{numb_samples}samples_seed_{seed}_{category}.pkl'
         #saving output
         output.to_pickle(path_2results)
 

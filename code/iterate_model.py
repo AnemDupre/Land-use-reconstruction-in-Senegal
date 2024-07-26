@@ -37,7 +37,7 @@ def iterate_nat(numb_samples, calculation_done, path_repository,
             save.save_sampling(params_list, path_results, seed, modification_marker, msd_list=msd_list)
         else :
             save.save_sampling(params_list, path_results, seed, modification_marker)
-        save.save_outputs(path_results, seed, 
+        save.save_outputs(path_results, seed, country,
                           crop_df, past_df, crop_subs_df, crop_mark_df, 
                           fal_df, un_df, veg_df, intensification_df,
                           modification_marker=modification_marker)
@@ -57,7 +57,7 @@ def iterate_nat(numb_samples, calculation_done, path_repository,
 
 
 def iterate_reg(numb_samples, calculation_done, path_repository, 
-                surface, seed, inputs,
+                surface, seed, inputs, scale,
                 header=None, country="Senegal"):
     
     path_results = path_repository + "\\results\\regional\\"
@@ -70,8 +70,8 @@ def iterate_reg(numb_samples, calculation_done, path_repository,
         [crop_df, past_df, crop_subs_df, crop_mark_df, fal_df, un_df, veg_df, intensification_df] = lu_list
         
         #save
-        save.save_sampling(params_list, path_results, seed)
-        save.save_outputs(path_results, seed, 
+        save.save_sampling(params_list, path_results, seed, scale)
+        save.save_outputs(path_results, seed, scale,
                           crop_df, past_df, crop_subs_df, crop_mark_df, 
                           fal_df, un_df, veg_df, intensification_df)
 

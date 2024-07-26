@@ -27,20 +27,25 @@ import inputs_full_fetch
 import iterate_model
 import plot
 import modulate_inputs
+import sensitivity2inputs
+import input_fetch
 
 #%% National level
 numb_samples = 10
 rain_data2use = "era_wb" #to choose from ["world_bank", "era", "crudata", "era_wb"]
 calculation_done = False
 header = None#"2024-06-20_10000samples_seed_42" # name with conditions if calculation has been done, format "{yyyy-mm-dd}_{numb_sample}_samples_seed_{seed}", None otherwise
+scale = "national"
 
 inputs_nat = inputs_full_fetch.nat_inputs_full_fetch(path_data, country,
                                                      NAT_AREA, rain_data2use)
-msd_list, params_list, lu_list = iterate_model.iterate_nat(numb_samples, calculation_done, path_repository, NAT_AREA, seed, inputs_nat, header=header)
+params_list, lu_list = iterate_model.iterate_nat(numb_samples, calculation_done, path_repository, NAT_AREA, seed, inputs_nat, header=header, calculate_msd=False)
 [crop_df, past_df, crop_subs_df, crop_mark_df, fal_df, un_df, veg_df, intensification_df] = lu_list
 
 # Plotting lu and validation
-plot.plot_all_lu(lu_list)
+#plot.plot_all_lu(lu_list, scale, NAT_AREA)
+plot.display_median_stack_validation(lu_list, "national")
+plot.plot_reg_lu(lu_list, "national", NAT_AREA)
 
 #%%sensitivity to inputs
 
@@ -58,7 +63,6 @@ msd_list_modified, params_list_modified, lu_list_modified = iterate_model.iterat
 plot.plot_all_lu(lu_list_modified)
 
 #%% quantifying sensitivity to inputs
-import sensitivity2inputs
 
 calculation_done = False
 numb_samples = 100
@@ -85,16 +89,52 @@ for key in lu_modified_dic.keys():
     sensitivity2inputs.plot_lu_comparaison(lu_list_original, lu_list_modified, key)
 
 #%%regional scale
-import plot
+import input_fetch, plot
+
 superficies, inputs_reg_dic = inputs_full_fetch.reg_inputs_full_fetch(path_data)
+#tappan_data = input_fetch.fetch_other_reg_data("C:\\Users\\emili\\OneDrive\\Documents\\academique\\M2_ens_ulm\\S2_stage\\repository_updated\\data\\Senegal\\validation_data\\tappan_land_use_data\\reg_lu.xlsx")
 header = None
-numb_samples = 10
+numb_samples = 100
 calculation_done = False
 
-for region in ["Diourbel"]:#superficies.keys():
+for region in superficies.keys():
+    inputs_reg_dic[region].drop("biom_prod", axis=1, inplace=True)
+
+for region in superficies.keys():
     inputs_reg = inputs_reg_dic[region]
-    params_list, lu_list = iterate_model.iterate_reg(numb_samples, calculation_done, path_repository, superficies[region], seed, inputs_reg, header=header)
+    params_list, lu_list = iterate_model.iterate_reg(numb_samples, calculation_done, path_repository, superficies[region], seed, inputs_reg[15:], scale, header=header)
     
     # Plotting lu and validation
-    #plot.plot_all_lu(lu_list)
-    plot.plot_reg_lu(lu_list, region, superficies[region], path_results=None)
+    #plot.plot_all_lu(lu_list, region, superficies[region])
+    plot.plot_reg_lu(lu_list, region, superficies[region])
+    #plot.display_median_stack(lu_list, region)
+    plot.display_median_stack_validation(lu_list, region)
+
+
+#%% combining the four regions
+
+import fetch_tappan
+import inputs_full_fetch
+
+#combining tappan data
+scale = "groundnut_bassin"
+#combined_tappan_data = fetch_tappan.fetch_tappan('groundnut_bassin', superficies=superficies)
+superficy, groundnutbassin_inputs = inputs_full_fetch.combined_reg_full_fetch(path_data)
+header = None
+numb_samples = 1000
+calculation_done = False
+
+#get rid of the biom_prod column
+groundnutbassin_inputs.drop("biom_prod", axis=1, inplace=True)
+
+params_list, lu_list = iterate_model.iterate_reg(numb_samples, calculation_done, 
+                                                 path_repository, superficy, seed, 
+                                                 groundnutbassin_inputs[15:], scale, header=header)
+    
+# Plotting lu and validation
+#plot.plot_all_lu(lu_list, region, superficies[region])
+import plot
+plot.plot_reg_lu(lu_list, scale, superficy)
+#plot.display_median_stack(lu_list, region)
+plot.display_median_stack_validation(lu_list, scale, superficies)
+

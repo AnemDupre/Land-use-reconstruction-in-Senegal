@@ -64,7 +64,7 @@ class LandUseModel:
                                      "veg":[self.land_use_calculator.prev_veg],
                                      "intensification": [self.land_use_calculator.intensification]})
             self.lu_memory = pd.concat([self.lu_memory, lu_state])
-            
+
 
 class LandUseCalculator:
     def __init__(self, NAT_AREA, exogenous, params=None):
@@ -238,16 +238,16 @@ class LandUseCalculator:
             max_past = self.liv*self.BIOM_CONSO_MAX/self.biom_prod
             
             #self.prev_fal = (self.crop_subs +self.crop_mark)*self.CF_INIT - ((self.crop_subs +self.crop_mark)*self.CF_INIT - self.prev_fal + self.land_d_no_fal-self.prev_un)*(1-self.crop_past_ratio)
-            self.prev_fal += ((self.crop_subs +self.crop_mark) - (self.prev_crop_subs + self.prev_crop_mark))*self.CF_INIT - (self.fal_d - self.prev_fal + self.land_d_no_fal-self.prev_un)*(1-self.crop_past_ratio)
+            self.prev_fal += ((self.crop_subs + self.crop_mark) - (self.prev_crop_subs + self.prev_crop_mark))*self.CF_INIT - (self.fal_d - self.prev_fal + self.land_d_no_fal-self.prev_un)*(1-self.crop_past_ratio)
             self.prev_fal = max(self.prev_fal, self.NAT_AREA - self.prev_veg - self.crop_subs - self.crop_mark - max_past, 0) #fal can't be negative
             self.prev_fal = min((self.crop_subs +self.crop_mark)*self.CF_INIT, self.prev_fal) #fal can't be bigger than CF_init * (crop_mark + crop_subs)
             
             #treshold on fal
             if self.prev_fal<self.cf_inf *(self.crop_subs +self.crop_mark):
-                self.prev_fal = self.cf_inf *(self.crop_subs +self.crop_mark)
-            
+                self.prev_fal = self.cf_inf *(self.crop_subs + self.crop_mark)
+            #print(self.prev_fal)
             self.prev_past = max(min(self.NAT_AREA - self.prev_veg - self.prev_fal - self.prev_crop_subs - self.prev_crop_mark, self.liv*self.BIOM_CONSO_MAX/self.biom_prod), 0)
-        
+            
         self.prev_crop_subs = self.crop_subs # demand
         self.prev_crop_mark = self.crop_mark
 
@@ -255,10 +255,12 @@ class LandUseCalculator:
         self.prev_un = max(self.NAT_AREA - self.prev_past - self.prev_veg - self.prev_crop, 0) #we only want positive values for un
         
         if self.prev_crop_subs + self.prev_crop_mark + self.prev_past + self.prev_fal + self.prev_veg > self.NAT_AREA:
+            sum_land_d = self.prev_crop_subs + self.prev_crop_mark + self.prev_past + self.prev_fal
             #we normalize the values
-            self.prev_crop_subs = (self.NAT_AREA-self.prev_veg) * self.prev_crop_subs / (self.prev_crop_subs + self.prev_crop_mark + self.prev_past + self.prev_fal)
-            self.prev_crop_mark = (self.NAT_AREA-self.prev_veg) * self.prev_crop_mark / (self.prev_crop_subs + self.prev_crop_mark + self.prev_past + self.prev_fal)
-            self.prev_past = (self.NAT_AREA-self.prev_veg) * self.prev_past / (self.prev_crop_subs + self.prev_crop_mark + self.prev_past + self.prev_fal)
-            self.prev_fal = (self.NAT_AREA-self.prev_veg) * self.prev_fal / (self.prev_crop_subs + self.prev_crop_mark + self.prev_past + self.prev_fal)
+            self.prev_crop_subs = (self.NAT_AREA-self.prev_veg) * self.prev_crop_subs / sum_land_d
+            self.prev_crop_mark = (self.NAT_AREA-self.prev_veg) * self.prev_crop_mark / sum_land_d
+            self.prev_past = (self.NAT_AREA-self.prev_veg) * self.prev_past / sum_land_d
+            self.prev_fal = (self.NAT_AREA-self.prev_veg) * self.prev_fal / sum_land_d
         
         self.prev_crop = self.prev_crop_subs + self.prev_crop_mark + self.prev_fal
+        

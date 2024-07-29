@@ -26,7 +26,7 @@ def generate_parameter_sets(numb, seed):
     a_biom_prod_range = [0.0025, 0.005]
     b_biom_prod_range = [-0.20, 0.30]
     crop_past_ratio_range = [1/5, 2/3]
-    cf_inf_range = [0, 0.5]
+    #cf_inf_range = [0, 0.5]
     
     params_list_rand = []
     for i in range(numb):
@@ -49,10 +49,10 @@ def generate_parameter_sets(numb, seed):
                   "b_biom_prod":np.random.uniform(low=b_biom_prod_range[0],
                                                      high=b_biom_prod_range[1]),
                   "crop_past_ratio":np.random.uniform(low=crop_past_ratio_range[0],
-                                                     high=crop_past_ratio_range[1]),
-                  "cf_inf":np.random.uniform(low=cf_inf_range[0],
-                                             high=cf_inf_range[1])
-                  }
+                                                     high=crop_past_ratio_range[1])}
+                  # "cf_inf":np.random.uniform(low=cf_inf_range[0],
+                  #                            high=cf_inf_range[1])
+                  # }
         params_list_rand.append(params)
         
     return params_list_rand #list of num parameter sets randomely sampled

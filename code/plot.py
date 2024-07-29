@@ -129,9 +129,9 @@ def plot_reg_lu(lu_list, region, region_surface, path_results=None):
         ax.set_ylabel(f'{categories[c]} (ha)')
 
         #plt.xticks(rotation=30)
-        if path_results!=None:
-            save_path = path_results + categories[c] + "no_scatter.svg"
-            fig.savefig(save_path, bbox_inches='tight', format='svg')
+    if path_results!=None:
+        save_path = path_results + categories[c] + "no_scatter.svg"
+        fig.savefig(save_path, bbox_inches='tight', format='svg')
     
     fig.set_dpi(600)
     
@@ -272,7 +272,7 @@ def display_median_stack_validation(lu_list, scale, superficies=None, path_resul
     plt.show()
     
 
-def plot_input(input_df, name_inputs):
+def plot_input(input_df, name_inputs, scale):
     year = list(set(input_df["year"]))
     
     for name_input in name_inputs:
@@ -280,3 +280,96 @@ def plot_input(input_df, name_inputs):
     plt.title(name_input)
     plt.legend()
     plt.show()
+
+
+def saturation_frequency(lu_list_list, scales, path_results=None):
+    colours = ["#4694a7", "#EE442F"]
+    
+    fig, ax = plt.subplots(figsize =(9, 2))
+    for k, (lu_list, scale) in enumerate(zip(lu_list_list, scales)):
+        intensification_df = lu_list[-1].copy()
+        
+        # Calculating normalized medians
+        year = list(set(intensification_df["year"]))
+        
+        for idx, column in enumerate(intensification_df.columns[1:]):
+            intensification_df.columns.values[idx+1] = f"{idx}"
+        
+        #intensification_df["mean"] = intensification_df.sum(axis=0)
+        intensification_df['mean'] = intensification_df.drop(intensification_df.columns[0], axis=1).sum(axis=1)
+        intensification_df["mean"] = intensification_df["mean"].div(len(intensification_df.columns)-2)
+        
+        plt.plot(year, intensification_df["mean"].tolist(), color=colours[k], label=scale)
+    plt.ylabel("saturation frequency")
+    plt.xlabel("year")
+    plt.legend(loc="lower right")
+    fig.set_dpi(600)
+    plt.show()
+
+
+def mean_cf(lu_list_list, scales, path_results=None):
+    fig, ax = plt.subplots(figsize=(9, 2))
+    
+    colours_light = ["#63ACBE", "#f48274"]
+    colours_dark = ["#4694a7", "#EE442F"]
+    
+    divergence = [0.2, -0.2]
+    
+    #medianprops = dict(linewidth=3, color='r')
+    for k, (lu_list, scale) in enumerate(zip(lu_list_list, scales)):
+        
+        subs_df = lu_list[2].copy()
+        mark_df = lu_list[3].copy()
+        fal_df = lu_list[4].copy()
+        
+        # calculating the cultivation frequency
+        cf_df = pd.DataFrame(columns=["year"])
+        cf_df["year"] = subs_df["year"]
+        
+        for idx in range(len(subs_df.columns)-1):
+            cf_df[f"simu_{idx}"] = fal_df.iloc[:, idx+1]
+            series_sum = subs_df.iloc[:, idx+1] + mark_df.iloc[:, idx+1]
+            cf_df[f"simu_{idx}"] = cf_df[f"simu_{idx}"].div(series_sum)
+        cf_df.dropna(axis=1, inplace=True)
+        year = list(set(cf_df["year"]))
+        year = [int(y) for y in year]
+        for i, y in enumerate(year) :
+            y+=divergence[k]
+            if i!=0:
+                series = cf_df.iloc[i, 1:]
+                
+                
+                cl = colours_light[k]
+                cd = colours_dark[k]
+                
+                plt.boxplot(series, positions=[y],
+                           patch_artist=True, notch=False,
+                           boxprops=dict(facecolor=cl, color=cl, linewidth=2),
+                           capprops=dict(color=cl),
+                           whiskerprops=dict(color=cl),
+                           flierprops=dict(markeredgecolor=cl,
+                                           markerfacecolor=cl,
+                                           marker="o",
+                                           alpha=0.5,
+                                           markersize=1.5,
+                                           markeredgewidth=0.2),
+                           #medianprops=dict(color=c),
+                           showfliers=True,
+
+                           medianprops=dict(linewidth=2, color=cd))
+                           #label = scale)
+    year = list(set(lu_list_list[0][0]["year"]))
+    year = [int(y) for y in year]
+    #changing ticks
+    ticks = np.array(year)
+    new_ticks = np.delete(ticks, np.where(ticks%10 != 0))
+    #new_ticks = np.delete(new_ticks, np.where(new_ticks%1 != 0))
+    ax.set_xticks(new_ticks, new_ticks, rotation=30)
+    fig.set_dpi(600)
+
+    plt.ylabel("rotation frequency")
+    plt.xlabel("year")
+    plt.show()  
+
+
+        

@@ -31,21 +31,23 @@ import sensitivity2inputs
 import input_fetch
 
 #%% National level
-numb_samples = 10
+numb_samples = 1000
 rain_data2use = "era_wb" #to choose from ["world_bank", "era", "crudata", "era_wb"]
 calculation_done = False
-header = None#"2024-06-20_10000samples_seed_42" # name with conditions if calculation has been done, format "{yyyy-mm-dd}_{numb_sample}_samples_seed_{seed}", None otherwise
+header = None #"2024-06-20_10000samples_seed_42" # name with conditions if calculation has been done, format "{yyyy-mm-dd}_{numb_sample}_samples_seed_{seed}", None otherwise
 scale = "national"
 
 inputs_nat = inputs_full_fetch.nat_inputs_full_fetch(path_data, country,
                                                      NAT_AREA, rain_data2use)
-params_list, lu_list = iterate_model.iterate_nat(numb_samples, calculation_done, path_repository, NAT_AREA, seed, inputs_nat, header=header, calculate_msd=False)
-[crop_df, past_df, crop_subs_df, crop_mark_df, fal_df, un_df, veg_df, intensification_df] = lu_list
+params_list, lu_list_nat = iterate_model.iterate_nat(numb_samples, calculation_done, path_repository, NAT_AREA, seed, inputs_nat, header=header, calculate_msd=False)
+[crop_df, past_df, crop_subs_df, crop_mark_df, fal_df, un_df, veg_df, intensification_df] = lu_list_nat
+
+plot.saturation_frequency([lu_list_nat], scale)
 
 # Plotting lu and validation
 #plot.plot_all_lu(lu_list, scale, NAT_AREA)
-plot.display_median_stack_validation(lu_list, "national")
-plot.plot_reg_lu(lu_list, "national", NAT_AREA)
+plot.display_median_stack_validation(lu_list_nat, "national", path_results=path_results + "medians_")
+plot.plot_reg_lu(lu_list_nat, "national", NAT_AREA, path_results=path_results + "stochastic_individual_")
 
 #%%sensitivity to inputs
 
@@ -94,21 +96,21 @@ import input_fetch, plot
 superficies, inputs_reg_dic = inputs_full_fetch.reg_inputs_full_fetch(path_data)
 #tappan_data = input_fetch.fetch_other_reg_data("C:\\Users\\emili\\OneDrive\\Documents\\academique\\M2_ens_ulm\\S2_stage\\repository_updated\\data\\Senegal\\validation_data\\tappan_land_use_data\\reg_lu.xlsx")
 header = None
-numb_samples = 100
+numb_samples = 1000
 calculation_done = False
 
-for region in superficies.keys():
-    inputs_reg_dic[region].drop("biom_prod", axis=1, inplace=True)
+#for region in superficies.keys():
+#    inputs_reg_dic[region].drop("biom_prod", axis=1, inplace=True)
 
 for region in superficies.keys():
     inputs_reg = inputs_reg_dic[region]
-    params_list, lu_list = iterate_model.iterate_reg(numb_samples, calculation_done, path_repository, superficies[region], seed, inputs_reg[15:], scale, header=header)
+    params_list, lu_list = iterate_model.iterate_reg(numb_samples, calculation_done, path_repository, superficies[region], seed, inputs_reg[15:], region, header=header)
     
     # Plotting lu and validation
     #plot.plot_all_lu(lu_list, region, superficies[region])
-    plot.plot_reg_lu(lu_list, region, superficies[region])
+    plot.plot_reg_lu(lu_list, region, superficies[region], path_results=path_results + f"{region}_stochastic_individual_")
     #plot.display_median_stack(lu_list, region)
-    plot.display_median_stack_validation(lu_list, region)
+    plot.display_median_stack_validation(lu_list, region, path_results=path_results  + f"{region}_medians_")
 
 
 #%% combining the four regions
@@ -121,7 +123,7 @@ scale = "groundnut_bassin"
 #combined_tappan_data = fetch_tappan.fetch_tappan('groundnut_bassin', superficies=superficies)
 superficy, groundnutbassin_inputs = inputs_full_fetch.combined_reg_full_fetch(path_data)
 header = None
-numb_samples = 100
+numb_samples = 1000
 calculation_done = False
 
 #get rid of the biom_prod column
@@ -134,8 +136,19 @@ params_list, lu_list = iterate_model.iterate_reg(numb_samples, calculation_done,
     
 # Plotting lu and validation
 #plot.plot_all_lu(lu_list, region, superficies[region])
-import plot
-plot.plot_reg_lu(lu_list, scale, superficy)
-#plot.display_median_stack(lu_list, region)
-plot.display_median_stack_validation(lu_list, scale, superficies)
 
+plot.plot_reg_lu(lu_list, scale, superficy, path_results=path_results + f"{scale}_medians_")
+#plot.display_median_stack(lu_list, region)
+plot.display_median_stack_validation(lu_list, scale, superficies, path_results=path_results + f"{scale}_stochastic_individual_")
+
+
+plot.saturation_frequency([lu_list_nat, lu_list], ["national", "groundnut bassin"])
+plot.mean_cf([lu_list], ["groundnut bassin"])
+
+#%%
+import plot
+#plot.mean_cf([lu_list_nat, lu_list], ["national", "groundnut bassin"])
+#plot.saturation_frequency([lu_list_nat, lu_list], ["national", "groundnut bassin"])
+plot.plot_3_inputs()
+
+#%% groundnut bassin with FAO yield and no biom prod injected

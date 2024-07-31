@@ -287,7 +287,7 @@ def saturation_frequency(lu_list_list, scales, path_results=None):
     
     fig, ax = plt.subplots(figsize =(9, 2))
     for k, (lu_list, scale) in enumerate(zip(lu_list_list, scales)):
-        intensification_df = lu_list[-1].copy()
+        intensification_df = lu_list[7].copy()
         
         # Calculating normalized medians
         year = list(set(intensification_df["year"]))
@@ -372,4 +372,91 @@ def mean_cf(lu_list_list, scales, path_results=None):
     plt.show()  
 
 
-        
+
+def plot_3_inputs(inputs_df, path_results=None):
+    year = list(set(inputs_df["year"]))
+    fig, (ax1, ax2, ax3) = plt.subplots(nrows=3, ncols=1, 
+                                        figsize=(7,6), sharex=True)
+    
+    #demography
+    ax1.plot(year, inputs_df["pop_rur"], color="#359B73", linewidth=2,
+             label="rural population")
+    ax1.plot(year, inputs_df["pop_urb"], color="#F748A5", linewidth=2,
+             label="urban population")
+    ax1.set_ylabel('Demography (inhab)')
+    ax1.legend(loc="upper left")
+    #changing ticks
+    #ticks = ax.get_xticks()
+    #new_ticks = np.delete(ticks, np.where(ticks%10 != 0))
+    #ax.set_xticks(new_ticks, new_ticks, rotation=30)
+    
+    #livestock
+    ax2.plot(year, inputs_df["liv"], color="#d55e00", linewidth=2)
+    ax2.set_ylabel('Livestock (TLU)')
+
+    #cereal imports
+    ax3.plot(year, inputs_df["net_imp"], color="#3DB7E9", linewidth=2)
+    ax3.set_ylabel('Cereal imports (Tonnes)')
+    ax3.set_xlabel('Year')
+    
+    if path_results!=None:
+        save_path = path_results + "no_scatter.svg"
+        fig.savefig(save_path, bbox_inches='tight', format='svg')
+    
+    fig.set_dpi(600)
+    plt.show()
+
+
+
+def yields(inputs_nat, inputs_reg, lu_list_nat, lu_list_reg, path_results=None):
+    colours_light = ["#63ACBE", "#f48274"]
+    colours_dark = ["#4694a7", "#EE442F"]
+    divergence = [0.2, -0.2]
+    
+    fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1, sharex=True, 
+                                   figsize=(7,4))
+    #demography
+    ax1.plot(inputs_nat["year"], inputs_nat["yield"].div(1000), color=colours_dark[0], linewidth=2,
+             label="Senegal")
+    ax1.plot(inputs_reg["year"], inputs_reg["yield"].div(1000), color=colours_dark[1], linewidth=2,
+             label="Groundnut bassin")
+    ax1.set_ylabel('Yield\n (tonnes/ha/year)')
+    ax1.legend(loc="upper left")
+    
+    #plot biom_prod
+    year = list(set(lu_list_nat[-1]["year"]))
+    for i, y in enumerate(year) :
+        if i!=0:
+            series = lu_list_nat[-1].iloc[i, 1:]
+                
+            cl = colours_light[0]
+            cd = colours_dark[0]
+                    
+            ax2.boxplot(series, positions=[y],
+                        patch_artist=True, notch=False,
+                        boxprops=dict(facecolor=cl, color=cl, linewidth=2),
+                        capprops=dict(color=cl),
+                        whiskerprops=dict(color=cl),
+                        flierprops=dict(markeredgecolor=cl,
+                                            markerfacecolor=cl,
+                                            marker="o",
+                                            alpha=0.5,
+                                            markersize=1.5,
+                                            markeredgewidth=0.2),
+                        showfliers=True,
+                        medianprops=dict(linewidth=2, color=cd))
+    ax2.plot(lu_list_reg[-1]["year"], lu_list_reg[-1].iloc[:, 1],
+             color = colours_dark[1])
+    ax2.set_ylabel('Biomass productivity\n (tonnes/ha/year)')
+    #changing ticks
+    ticks = ax2.get_xticks()
+    new_ticks = np.delete(ticks, np.where(ticks%10 != 0))
+    #new_ticks = np.delete(new_ticks, np.where(new_ticks%1 != 0))
+    ax2.set_xticks(new_ticks, new_ticks, rotation=30)
+    
+    if path_results!=None:
+        save_path = path_results + "no_scatter.svg"
+        fig.savefig(save_path, bbox_inches='tight', format='svg')
+    
+    fig.set_dpi(600)
+    plt.show()

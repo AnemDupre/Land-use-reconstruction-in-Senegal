@@ -26,7 +26,7 @@ def iterate_nat(numb_samples, calculation_done, path_repository,
         params_list = iterate_functions.generate_parameter_sets(numb_samples, seed)
         #simulate land-use evolution
         lu_list = iterate_functions.iterate_simulation_df(params_list, NAT_AREA, inputs)
-        [crop_df, past_df, crop_subs_df, crop_mark_df, fal_df, un_df, veg_df, intensification_df] = lu_list
+        [crop_df, past_df, crop_subs_df, crop_mark_df, fal_df, un_df, veg_df, intensification_df, biom_df] = lu_list
         
         if calculate_msd:
             #calculate msd to FAO land-use data
@@ -47,7 +47,7 @@ def iterate_nat(numb_samples, calculation_done, path_repository,
 
         msd_list, params_list = save.load_saved_params_msds(path_results, header, modification_marker=modification_marker)
         lu_list = save.load_saved_outputs(path_results, header, modification_marker=modification_marker)
-        [crop_df, past_df, crop_subs_df, crop_mark_df, fal_df, un_df, veg_df, intensification_df] = lu_list
+        [crop_df, past_df, crop_subs_df, crop_mark_df, fal_df, un_df, veg_df, intensification_df, biom_df] = lu_list
     
     if calculate_msd:
         return msd_list, params_list, lu_list
@@ -67,7 +67,7 @@ def iterate_reg(numb_samples, calculation_done, path_repository,
         params_list = iterate_functions.generate_parameter_sets(numb_samples, seed)
         #simulate land-use evolution
         lu_list = iterate_functions.iterate_simulation_df(params_list, surface, inputs)
-        [crop_df, past_df, crop_subs_df, crop_mark_df, fal_df, un_df, veg_df, intensification_df] = lu_list
+        [crop_df, past_df, crop_subs_df, crop_mark_df, fal_df, un_df, veg_df, intensification_df, biom_df] = lu_list
         
         #save
         save.save_sampling(params_list, path_results, seed, scale)

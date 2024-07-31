@@ -68,6 +68,7 @@ def iterate_simulation_df(params_list, NAT_AREA, inputs):
     un_dfs = []
     veg_dfs = []
     intensification_dfs = []
+    biom_prod_dfs = []
     
     # Iterate over each point in the cluster
     for point in params_list:
@@ -81,6 +82,7 @@ def iterate_simulation_df(params_list, NAT_AREA, inputs):
         un_df = land_use_model.lu_memory[["year", "un"]]
         veg_df = land_use_model.lu_memory[["year", "veg"]]
         intensification_df = land_use_model.lu_memory[["year", "intensification"]]
+        biom_prod_df = land_use_model.biom_prod_memory[["year", "biom_prod"]]
         
         #adding the results to the corresponding lists
         crop_dfs.append(crop_df)
@@ -91,6 +93,7 @@ def iterate_simulation_df(params_list, NAT_AREA, inputs):
         un_dfs.append(un_df)
         veg_dfs.append(veg_df)
         intensification_dfs.append(intensification_df)
+        biom_prod_dfs.append(biom_prod_df)
         
     # Append the final DataFrame to the list
     crop_values = core.merge_df(crop_dfs, column="year")  
@@ -100,9 +103,12 @@ def iterate_simulation_df(params_list, NAT_AREA, inputs):
     fal_values = core.merge_df(fal_dfs, column="year")  
     un_values = core.merge_df(un_dfs, column="year")  
     veg_values = core.merge_df(veg_dfs, column="year")  
-    intensification_values = core.merge_df(intensification_dfs, column="year")  
+    intensification_values = core.merge_df(intensification_dfs, column="year")
+    biom_prod_values = core.merge_df(biom_prod_dfs, column="year")
     
-    land_use_list = [crop_values, past_values, crop_subs_values, crop_mark_values, fal_values, un_values, veg_values, intensification_values]
+    land_use_list = [crop_values, past_values, crop_subs_values, 
+                     crop_mark_values, fal_values, un_values, 
+                     veg_values, intensification_values, biom_prod_values]
     
     return land_use_list
 

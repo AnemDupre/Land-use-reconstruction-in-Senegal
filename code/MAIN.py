@@ -40,9 +40,9 @@ scale = "national"
 inputs_nat = inputs_full_fetch.nat_inputs_full_fetch(path_data, country,
                                                      NAT_AREA, rain_data2use)
 params_list, lu_list_nat = iterate_model.iterate_nat(numb_samples, calculation_done, path_repository, NAT_AREA, seed, inputs_nat, header=header, calculate_msd=False)
-[crop_df, past_df, crop_subs_df, crop_mark_df, fal_df, un_df, veg_df, intensification_df] = lu_list_nat
+[crop_df, past_df, crop_subs_df, crop_mark_df, fal_df, un_df, veg_df, intensification_df, biom_prod] = lu_list_nat
 
-plot.saturation_frequency([lu_list_nat], scale)
+plot.saturation_frequency([lu_list_nat], [scale])
 
 # Plotting lu and validation
 #plot.plot_all_lu(lu_list, scale, NAT_AREA)
@@ -122,6 +122,7 @@ import inputs_full_fetch
 scale = "groundnut_bassin"
 #combined_tappan_data = fetch_tappan.fetch_tappan('groundnut_bassin', superficies=superficies)
 superficy, groundnutbassin_inputs = inputs_full_fetch.combined_reg_full_fetch(path_data)
+groundnutbassin_inputs["yield"] = groundnutbassin_inputs["yield"].apply(lambda x: x*2)
 header = None
 numb_samples = 1000
 calculation_done = False
@@ -149,6 +150,9 @@ plot.mean_cf([lu_list], ["groundnut bassin"])
 import plot
 #plot.mean_cf([lu_list_nat, lu_list], ["national", "groundnut bassin"])
 #plot.saturation_frequency([lu_list_nat, lu_list], ["national", "groundnut bassin"])
-plot.plot_3_inputs()
+#plot.plot_3_inputs(inputs_nat)
+#plot.plot_3_inputs(groundnutbassin_inputs[15:])
 
+
+plot.yields(inputs_nat, groundnutbassin_inputs[15:], lu_list_nat, lu_list)
 #%% groundnut bassin with FAO yield and no biom prod injected

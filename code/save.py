@@ -143,7 +143,7 @@ def load_saved_params_msds(path_results, header, modification_marker=None):
     if "msd_list" in locals():
         return msd_list, params_list
     else :
-        return _ , params_list
+        return ( None , params_list)
 
 
 

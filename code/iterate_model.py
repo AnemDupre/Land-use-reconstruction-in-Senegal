@@ -5,84 +5,190 @@ Created on Wed Jun 19 10:19:07 2024
 @author: anem
 """
 
-import iterate_functions
-import save
-
-def iterate_nat(numb_samples, calculation_done, path_repository, 
-                NAT_AREA, seed, inputs, 
-                modified_inputs=False, modification_marker=None,
-                header=None, country="Senegal",
-                calculate_msd=True):
-    #setting path
-    if modified_inputs:
-        path_results = path_repository + "\\results\\national\\modified_inputs\\"
-    else:
-        path_results = path_repository + "\\results\\national\\original_inputs\\"
-        
-    path_data = path_repository + f"\\data\\{country}\\"
-    
-    if not(calculation_done):
-        #generate parameter sets
-        params_list = iterate_functions.generate_parameter_sets(numb_samples, seed)
-        #simulate land-use evolution
-        lu_list = iterate_functions.iterate_simulation_df(params_list, NAT_AREA, inputs)
-        [crop_df, past_df, crop_subs_df, crop_mark_df, fal_df, un_df, veg_df, intensification_df, biom_df] = lu_list
-        
-        if calculate_msd:
-            #calculate msd to FAO land-use data
-            msd_list = iterate_functions.iterate_msd_calc(past_df, crop_subs_df, crop_mark_df, fal_df, veg_df, path_data)
-
-        #save
-        if "msd_list" in locals():
-            save.save_sampling(params_list, path_results, seed, modification_marker, msd_list=msd_list)
-        else :
-            save.save_sampling(params_list, path_results, seed, modification_marker)
-        save.save_outputs(path_results, seed, country,
-                          crop_df, past_df, crop_subs_df, crop_mark_df, 
-                          fal_df, un_df, veg_df, intensification_df,
-                          modification_marker=modification_marker)
-
-    else :
-        #fetch sampled parameters, model outputs and msds
-
-        msd_list, params_list = save.load_saved_params_msds(path_results, header, modification_marker=modification_marker)
-        lu_list = save.load_saved_outputs(path_results, header, modification_marker=modification_marker)
-        [crop_df, past_df, crop_subs_df, crop_mark_df, fal_df, un_df, veg_df, intensification_df, biom_df] = lu_list
-    
-    if calculate_msd:
-        return msd_list, params_list, lu_list
-    else :
-        return params_list, lu_list
+#imports
+import core
+import numpy as np
+import model
 
 
 
-def iterate_reg(numb_samples, calculation_done, path_repository, 
-                surface, seed, inputs, scale,
-                header=None, country="Senegal"):
-    
-    path_results = path_repository + "\\results\\regional\\"
-    
-    if not(calculation_done):
-        #generate parameter sets
-        params_list = iterate_functions.generate_parameter_sets(numb_samples, seed)
-        #simulate land-use evolution
-        lu_list = iterate_functions.iterate_simulation_df(params_list, surface, inputs)
-        [crop_df, past_df, crop_subs_df, crop_mark_df, fal_df, un_df, veg_df, intensification_df, biom_df] = lu_list
-        
-        #save
-        save.save_sampling(params_list, path_results, seed, scale)
-        save.save_outputs(path_results, seed, scale,
-                          crop_df, past_df, crop_subs_df, crop_mark_df, 
-                          fal_df, un_df, veg_df, intensification_df)
+def generate_parameter_sets(numb, seed):
+    """
+    Samples parameter sets from the intervals deduced from literature.
 
-    else :
-        #fetch sampled parameters, model outputs and msds
+    Parameters
+    ----------
+    numb : INT
+        number of parameter sets to generate.
+    seed : INT
+        seed for reproducibility.
 
-        params_list = save.load_saved_params_msds(path_results, header)
-        lu_list = save.load_saved_outputs(path_results, header)
-        [crop_df, past_df, crop_subs_df, crop_mark_df, fal_df, un_df, veg_df, intensification_df] = lu_list
-    
+    Returns
+    -------
+    TYPE
+        list of numb parameter sets presented as dictionaries.
+
+    """
+    np.random.seed(seed)
+    #define ranges
+    biom_conso_min_range = [1.7, 3.0]
+    biom_conso_max_range = [3.4, 6.1]
+    food_conso_range = [109.8, 327.1]
+    cf_range = [1, 3]
+    fuel_conso_rur_range = [0.41, 1.26]
+    fuel_conso_urb_range = [0.41, 1.26]
+    veg_prod_range = [0.1, 3.0]
+    a_biom_prod_range = [0.0025, 0.005]
+    b_biom_prod_range = [-0.20, 0.30]
+    params_list_rand = []
+    for _ in range(numb):
+        params = {"biom_conso_min":np.random.uniform(low=biom_conso_min_range[0],
+                                                     high=biom_conso_min_range[1]),
+                  "biom_conso_max":np.random.uniform(low=biom_conso_max_range[0],
+                                                     high=biom_conso_max_range[1]),
+                  "food_conso":np.random.uniform(low=food_conso_range[0],
+                                                 high=food_conso_range[1]),
+                  "cf":np.random.uniform(low=cf_range[0],
+                                         high=cf_range[1]),
+                  "fuel_conso_rur":np.random.uniform(low=fuel_conso_rur_range[0],
+                                                     high=fuel_conso_rur_range[1]),
+                  "fuel_conso_urb":np.random.uniform(low=fuel_conso_urb_range[0],
+                                                     high=fuel_conso_urb_range[1]),
+                  "veg_prod":np.random.uniform(low=veg_prod_range[0],
+                                               high=veg_prod_range[1]),
+                  "a_biom_prod":np.random.uniform(low=a_biom_prod_range[0],
+                                                  high=a_biom_prod_range[1]),
+                  "b_biom_prod":np.random.uniform(low=b_biom_prod_range[0],
+                                                     high=b_biom_prod_range[1])}
+
+        params_list_rand.append(params)
+    return params_list_rand #list of num parameter sets randomely sampled
+
+
+
+def iterate_simulation(params_list, area, inputs,
+                       preservation, calculate_demand):
+    """
+    Simulates the land use evolutions of the given parameters sets.
+    Results are then extracted, and grouped by ouput type 
+    (pastoral land, fallows...).
+
+    Parameters
+    ----------
+    params_list : LIST OF DICTIONARIES
+        Parameter sets we want to use for simulations.
+    area : INT or FLOAT
+        Surface of the considered region.
+    inputs : DATAFRAME
+        Contains the inputs of the model: 
+            pop_rur, pop_urb, liv, rain, 
+            net_imp, yield
+            optional: biom_prod.
+    preservation : BOOLEAN
+        Whether fuelwood extraction areas are protected or not.
+    calculate_demand : BOOLEAN
+        Whether we output land uses or the demand for lands.
+
+    Returns
+    -------
+    land_use_list : LIST OF DATAFRAME
+        Each dataframe contains the results of all simulations for 
+        the given output.
+
+    """
+    crop_dfs = []
+    past_dfs = []
+    crop_subs_dfs = []
+    crop_mark_dfs = []
+    fal_dfs = []
+    un_dfs = []
+    veg_dfs = []
+    intensification_dfs = []
+    biom_prod_dfs = []
+    sum_lu_dfs = []
+
+    # launch simulations and extract land use outputs
+    for point in params_list:
+        land_use_model = model.LandUseModel(area, inputs, params=point,
+                                            preservation=preservation,
+                                            calculate_demand=calculate_demand)
+        land_use_model.iterate()
+        crop_df = land_use_model.lu_memory[["year", "crop"]].rename(columns={'crop': 'crop'})
+        past_df = land_use_model.lu_memory[["year", "past"]]
+        crop_subs_df = land_use_model.lu_memory[["year", "crop_subs"]]
+        crop_mark_df = land_use_model.lu_memory[["year", "crop_mark"]]
+        fal_df = land_use_model.lu_memory[["year", "fal"]]
+        un_df = land_use_model.lu_memory[["year", "un"]]
+        veg_df = land_use_model.lu_memory[["year", "veg"]]
+        intensification_df = land_use_model.lu_memory[["year", "intensification"]]
+        biom_prod_df = land_use_model.biom_prod_memory[["year", "biom_prod"]]
+        sum_lu_df = land_use_model.lu_memory[["year", "sum_lu"]]
+
+        #adding the results to the corresponding lists
+        crop_dfs.append(crop_df)
+        past_dfs.append(past_df)
+        crop_subs_dfs.append(crop_subs_df)
+        crop_mark_dfs.append(crop_mark_df)
+        fal_dfs.append(fal_df)
+        un_dfs.append(un_df)
+        veg_dfs.append(veg_df)
+        intensification_dfs.append(intensification_df)
+        biom_prod_dfs.append(biom_prod_df)
+        sum_lu_dfs.append(sum_lu_df)
+
+    # Concatenate the lists in a single dataframe for each output
+    crop_values = core.merge_df(crop_dfs, column="year")
+    past_values = core.merge_df(past_dfs, column="year")
+    crop_subs_values = core.merge_df(crop_subs_dfs, column="year")
+    crop_mark_values = core.merge_df(crop_mark_dfs, column="year")
+    fal_values = core.merge_df(fal_dfs, column="year")
+    un_values = core.merge_df(un_dfs, column="year")
+    veg_values = core.merge_df(veg_dfs, column="year")
+    intensification_values = core.merge_df(intensification_dfs, column="year")
+    biom_prod_values = core.merge_df(biom_prod_dfs, column="year")
+    sum_lu_values = core.merge_df(sum_lu_dfs, column="year")
+
+    land_use_list = [crop_values, past_values, crop_subs_values,
+                     crop_mark_values, fal_values, un_values,
+                     veg_values, intensification_values, biom_prod_values,
+                     sum_lu_values]
+
+    return land_use_list
+
+
+
+def iterate(numb_samples, area, seed, inputs,
+            preservation=True, calculate_demand=False):
+    """
+    Generates the paramer sets samples and calculates associated outputs.
+
+    Parameters
+    ----------
+    numb_samples : TYPE
+        DESCRIPTION.
+    area : TYPE
+        DESCRIPTION.
+    seed : TYPE
+        DESCRIPTION.
+    inputs : TYPE
+        DESCRIPTION.
+    preservation : TYPE, optional
+        DESCRIPTION. The default is True.
+    calculate_demand : TYPE, optional
+        DESCRIPTION. The default is False.
+
+    Returns
+    -------
+    params_list : TYPE
+        DESCRIPTION.
+    lu_list : TYPE
+        DESCRIPTION.
+
+    """
+
+    #generate parameter sets
+    params_list = generate_parameter_sets(numb_samples, seed)
+    #simulate land-use evolution
+    lu_list = iterate_simulation(params_list, area, inputs, preservation, calculate_demand)
+
     return params_list, lu_list
-    
-    
-    

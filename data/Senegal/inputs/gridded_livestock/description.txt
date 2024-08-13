@@ -1,1 +1,0 @@
-processed_grid contains the sum of livestock in each region in TLU (cattle, goats, horses sheep)

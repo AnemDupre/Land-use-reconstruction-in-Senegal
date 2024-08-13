@@ -25,7 +25,7 @@ import fetch
 #%% National level
 
 #settings
-numb_samples = 10
+numb_samples = 1000
 scale = "senegal"
 NAT_AREA = 19253000
 path_inputs = path_data + f"\\inputs\\{scale}_inputs.xlsx"
@@ -43,11 +43,12 @@ params_list, lu_list_nat = iterate_model.iterate(numb_samples, NAT_AREA,
 plot.saturation_frequency([lu_list_nat], [scale])
 plot.display_median_stack_validation(lu_list_nat, scale, path_validation, NAT_AREA, path_results=path_results + "medians_")
 plot.plot_reg_lu(lu_list_nat, scale, NAT_AREA, path_results=path_results + "stochastic_individual_")
+plot.mean_cf([lu_list_nat], [scale])
 
 #%% Groundnut basin scale
 
 #settings
-numb_samples = 10
+numb_samples = 1000
 scale = "groundnut"
 GROUNDNUT_AREA = 3496200
 path_inputs = path_data + f"\\inputs\\{scale}_inputs.xlsx"
@@ -81,3 +82,4 @@ plot.mean_cf([lu_list_reg], ["groundnut bassin"])
 
 plot.plot_3_inputs_per_ha(inputs_nat, inputs_reg, NAT_AREA, 
                           GROUNDNUT_AREA, lu_list_nat, lu_list_reg)
+#look at the crop fallow cycle

@@ -560,3 +560,63 @@ def plot_3_inputs_per_ha(inputs_nat, inputs_reg,
 
     fig.set_dpi(600)
     plt.show()
+
+
+
+def display_past(lu_list, inputs, params_list):
+
+    liv = inputs["liv"]
+    years = list(set(inputs["year"]))
+    for simu in range(len(params_list)):
+        biom_conso = params_list[simu]["biom_conso_max"]
+        past = lu_list[1].iloc[simu + 1]
+        biom_prod = lu_list[8].iloc[simu + 1]
+
+        biom_conso = past*biom_prod/3
+        #dry mass produced by pastoral land (only 1/3 of it is available for livestock consumption)
+        needed_biom_conso = max_biom_conso*1000*²liv
+        #kg of dry matter per day per TLU
+        perc_satisf_conso = biom_conso/needed_biom_conso
+    
+    fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(7, 7), gridspec_kw={'height_ratios': [3, 1, 1]}) 
+    ax1.plot(year, past, label="pastural land", color="#139A43")
+    ax1.set_ylabel('pastural land (ha)')
+    
+    ax1_b = ax1.twinx()
+    ax1_b.plot(year, liv, label="livestock", color="#004E64", linestyle="dashed")
+    ax1_b.set_ylabel('livestock (eq TLU)')
+    h1, l1 = ax1.get_legend_handles_labels()
+    h2, l2 = ax1_b.get_legend_handles_labels()
+    ax1.legend(h1+h2, l1+l2, loc="lower right")
+    ax1.set_xlim(year[0],year[-1])
+    #♣ax1.tick_params(labelbottom=False)
+    
+    ax2.plot(year, perc_satisf_conso*100,
+             label="satisfied consumption (%)",
+             color="orange")
+    ax2.set_ylabel('satisfied consumption (%)')
+    xticks = ax2.get_xticks()
+    xticklabels = ["" if idx==7 else str(int(val)) for idx, val in enumerate(xticks)]
+    ax2.set_xticks(xticks)
+    ax2.set_xticklabels(xticklabels)
+    ax2.set_xlim(year[0],year[-1])
+    ax2.set_ylim(25,80)
+
+    ax3_b = ax3.twinx()
+    ax3_b.plot(year, large_rum,
+             label="large ruminants",
+             color="#00A5CF",
+             linestyle="dashed")
+    ax3_b.plot(year, small_rum,
+             label="small ruminants",
+             color="#ef476f",
+             linestyle="dashed")
+    ax3_b.set_ylabel('livestock (eq TLU)')
+    ax3_b.legend(loc="upper right")
+    ax3.set_xlim(year[0],year[-1])
+    ax3.tick_params(left=False, labelleft=False)
+    
+    ax1.set_title('Evolution of pastoral lands')
+    fig.align_ylabels()
+    fig.set_dpi(600)
+    plt.show()

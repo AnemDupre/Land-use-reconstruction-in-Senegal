@@ -21,9 +21,6 @@ os.chdir(path_code)
 import iterate_model
 import plot
 import fetch
-import modulate_inputs
-import sensitivity2inputs
-import pandas as pd
 
 #%% National level
 

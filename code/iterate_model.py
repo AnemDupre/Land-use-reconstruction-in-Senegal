@@ -9,6 +9,7 @@ Created on Wed Jun 19 10:19:07 2024
 import core
 import numpy as np
 import model
+import fetch
 
 
 
@@ -30,17 +31,20 @@ def generate_parameter_sets(numb, seed):
 
     """
     np.random.seed(seed)
-    #define ranges
-    biom_conso_min_range = [1.7, 3.0]
-    biom_conso_max_range = [3.4, 6.1]
-    food_conso_range = [109.8, 327.1]
-    cf_range = [1, 3]
-    fuel_conso_rur_range = [0.41, 1.26]
-    fuel_conso_urb_range = [0.41, 1.26]
-    veg_prod_range = [0.1, 3.0]
-    a_biom_prod_range = [0.0025, 0.005]
-    b_biom_prod_range = [-0.20, 0.30]
-    crop_past_ratio_range = [0, 1]
+    #fetch ranges
+    parameter_ranges = fetch.parameter_ranges()
+    
+    biom_conso_min_range = parameter_ranges["biom_conso_min"]
+    biom_conso_max_range = parameter_ranges["biom_conso_max"]
+    food_conso_range = parameter_ranges["food_conso"]
+    cf_range = parameter_ranges["cf"]
+    fuel_conso_rur_range = parameter_ranges["fuel_conso_rur"]
+    fuel_conso_urb_range = parameter_ranges["fuel_conso_urb"]
+    veg_prod_range = parameter_ranges["veg_prod"]
+    a_biom_prod_range = parameter_ranges["a_biom_prod"]
+    b_biom_prod_range = parameter_ranges["b_biom_prod"]
+    crop_past_ratio_range = parameter_ranges["crop_past_ratio"]
+
     params_list_rand = []
     for _ in range(numb):
         params = {"biom_conso_min":np.random.uniform(low=biom_conso_min_range[0],

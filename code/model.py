@@ -304,7 +304,6 @@ class LandUseCalculator:
                                          self.liv*self.biom_conso_min/self.biom_prod)
 
                     if self.prev_past > self.liv*self.biom_conso_max/self.biom_prod:
-                        print("pbm")
                         #if past is biger than what is need for pasture, the excess land is left fallowing
                         self.prev_fal += self.prev_past - self.liv*self.biom_conso_max/self.biom_prod
                         self.prev_past = self.liv*self.biom_conso_max/self.biom_prod

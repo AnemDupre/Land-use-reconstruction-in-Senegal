@@ -13,21 +13,22 @@ import fetch
 
 
 
-def land_uses_boxplots(lu_list, region, region_surface, path_results=None):
+def land_uses_boxplots(lu_list, scale, region_surface, path_results=None):
     """
-    For each outpuut land use category, plots the evolution of the 
-    percentage of occupied territory in the form of boxplots
+    For each output land use category, plots the evolution of the 
+    percentage of occupied territory in the form of boxplots.
 
     Parameters
     ----------
-    lu_list : TYPE
-        DESCRIPTION.
-    region : TYPE
-        DESCRIPTION.
-    region_surface : TYPE
-        DESCRIPTION.
-    path_results : TYPE, optional
-        DESCRIPTION. The default is None.
+    lu_list : TUPLE OF DATAFRAMES
+        With dataframes corresponding to each output
+        category from the model.
+    scale : STR
+        Name of considered region.
+    region_surface : INT or FLOAT
+        Region surface.
+    path_results : STR, optional
+        Where to save figure. The default is None.
 
     Returns
     -------
@@ -84,66 +85,19 @@ def land_uses_boxplots(lu_list, region, region_surface, path_results=None):
 
     #saving the figure
     if path_results!=None:
-        save_path = path_results + categories[c] + "no_scatter.svg"
+        save_path = path_results + scale + "_land_uses_boxplots.svg"
         fig.savefig(save_path, bbox_inches='tight', format='svg')
 
     plt.show()
 
 
 
-def display_median_stack(lu_list, region, path_results=None):#, items=["un","crop", "past", "veg"]):
-    
-    categories = ["past", "crop_subs", "crop_mark",
-                  "fal", "un", "veg"]
-    
-    plt.style.use('seaborn-v0_8-colorblind')
-
-    # Calculating normalized medians
-    year = list(set(lu_list[0]["year"]))
-    
-    sum_medians = pd.DataFrame(columns=["median_sum"])
-    sum_medians["year"] = lu_list[0]["year"]
-    
-    medians_dataframe = pd.DataFrame(columns={"year": lu_list[0]["year"]})
-    for e, output in enumerate(lu_list[1:7]):
-        kept_columns = output.columns[1:]
-        medians = output[kept_columns].median(axis=1)
-        medians_dataframe[categories[e]] = medians
-
-    sum_medians = medians_dataframe[list(medians_dataframe.columns[1:])].sum(axis=1)
-    #sum validated
-    medians_dataframe = medians_dataframe.div(sum_medians, axis=0)
-
-    land_uses = []
-    for e in range(len(lu_list[1:7])):
-        land_uses.append((categories[e], medians_dataframe[categories[e]].tolist()))
-    
-    land_uses = dict(land_uses)
-    #return land_uses
-    fig, ax = plt.subplots(figsize =(5, 2))
-
-    #ax.axhline(y=NAT_AREA, color="black", linestyle=":", label="national area")
-    ax.stackplot(year, land_uses.values(),
-                 labels=land_uses.keys(), alpha=0.8)
-    ax.legend(loc='center left', bbox_to_anchor=(1, 0.6))
-    ax.set_title('Evolution of land use')
-    ax.set_xlabel('Year')
-    ax.set_ylabel('Area (ha)')
-    plt.title(region)
-    fig.set_dpi(600) 
-    ax.set_xlim([year[0], year[-1]])
-    if path_results!=None:
-        savepath = path_results + "land_use_evolution" + ".svg"
-        fig.savefig(savepath, bbox_inches='tight', format='svg')
-    plt.show()
-
-
-
-def display_median_stack_validation(lu_list, scale, path_validation, superficy, path_results=None):
+def mean_stack_and_validation(lu_list, scale, path_validation,
+                              superficy, path_results=None):
     """
-    Plots the medians of land use outputs for categories
+    Plots the means of land use outputs for categories
     "past", "crop_subs", "crop_mark", "fal", "un", "veg".
-    Tappan data points can be added for validation.
+    Tappan data points are added for validation.
 
     Parameters
     ----------
@@ -151,8 +105,11 @@ def display_median_stack_validation(lu_list, scale, path_validation, superficy, 
         With dataframes corresponding to each output
         category from the model.
     scale : STR
-        Either "national" or the name of 
-        the considered region.
+        Name of considered region.
+    path_validation : STR
+        Path to Tappan validation data.
+    superficy : INT of FLOAT
+        Surface of considered region.
     path_results : STR, optional
         Where to save the figure.
         The default is None.
@@ -162,57 +119,51 @@ def display_median_stack_validation(lu_list, scale, path_validation, superficy, 
     None.
 
     """
-    #validation data
+    #fetching validation data
     val_data = fetch.df(path_validation)
-    #val_data = fetch_tappan.fetch_tappan(scale, superficies=superficies)
-    
+    #name of categories to plot
     categories = ["past", "crop_subs", "crop_mark",
                   "fal", "un", "veg"]
-    
-    plt.style.use('seaborn-v0_8-colorblind')
 
-    # Calculating normalized medians
-    year = list(set(lu_list[0]["year"]))
-    
-    sum_medians = pd.DataFrame(columns=["median_sum"])
-    sum_medians["year"] = lu_list[0]["year"]
-    
-    medians_dataframe = pd.DataFrame(columns={"year": lu_list[0]["year"]})
+    #calculating means
+    means_dataframe = pd.DataFrame(columns={"year": lu_list[0]["year"]})
     for e, output in enumerate(lu_list[1:7]):
         kept_columns = output.columns[1:]
-        medians = output[kept_columns].mean(axis=1)
-        medians_dataframe[categories[e]] = medians
-
-    sum_medians = medians_dataframe[list(medians_dataframe.columns[1:])].sum(axis=1)
-
-    #sum validated
-    #medians_dataframe = medians_dataframe.div(sum_medians, axis=0)
+        means = output[kept_columns].mean(axis=1)
+        means_dataframe[categories[e]] = means
 
     # Formatting the data for the stacked plot
     land_uses = []
     for e in range(len(lu_list[1:7])):
-        land_uses.append((categories[e], medians_dataframe[categories[e]].tolist()))
+        land_uses.append((categories[e],
+                          means_dataframe[categories[e]].tolist()))
     land_uses = dict(land_uses)
     desired_order_list = ["crop_subs", "crop_mark", "fal",  
                           "un", "past", "veg"]
     land_uses = {k: land_uses[k] for k in desired_order_list}
-    
+
     # Plotting
+    #choose color style
+    plt.style.use('seaborn-v0_8-colorblind')
+    #creating the figure
     fig, ax = plt.subplots(figsize =(5, 2))
     #plotting land use data
+    year = list(set(lu_list[0]["year"]))
     ax.stackplot(year, land_uses.values(),
                  labels=land_uses.keys(), alpha=0.8)
-    
     #plot tappan data for validation
-    crop_bar = ax.bar(val_data["year"], val_data["crop_prop"], edgecolor="w", 
-                      color="w", hatch="/////", label="croplands")
-                      
-                      
-                      
+    crop_bar = ax.bar(val_data["year"], val_data["crop_prop"],
+                      edgecolor="w", color="w",
+                      hatch="/////", label="croplands")
+    #setting hatch color
     for bc in crop_bar:
         bc._hatch_color = mpl.colors.to_rgba("k")
-    ax.bar(val_data["year"], val_data["veg_past_prop"], color="k", edgecolor="w",
-           bottom =  val_data["crop_prop"], label = "forests, steppes, and savannas") 
+    ax.bar(val_data["year"], val_data["veg_past_prop"],
+           color="k", edgecolor="w",
+           bottom =  val_data["crop_prop"], 
+           label = "forests, steppes, and savannas")
+    #plotting the region superficy
+    plt.axhline(y=superficy, color = "k", linestyle="dotted")
     #figure settings
     ax.legend(loc='center left', bbox_to_anchor=(1, 0.6))
     ax.set_title('Evolution of land use')
@@ -220,31 +171,22 @@ def display_median_stack_validation(lu_list, scale, path_validation, superficy, 
     ax.set_ylabel('Area (ha)')
     ax.legend(loc='center left', bbox_to_anchor=(1, 0.6))
     ax.set_xlim([year[0], year[-1]])
-    #ax.set_ylim([0, 1])
     fig.set_dpi(600)
     plt.title(scale)
-    plt.axhline(y=superficy, color = "k", linestyle="dotted")
-    
     #saving the figure
     if path_results!=None:
-        savepath = path_results + "land_use_evolution" + ".svg"
+        savepath = path_results + f"{scale}_mean_stack" + ".svg"
         fig.savefig(savepath, bbox_inches='tight', format='svg')
     plt.show()
-    
 
-def plot_input(input_df, name_inputs, scale):
-    year = list(set(input_df["year"]))
-    
-    for name_input in name_inputs:
-        plt.plot(year, input_df[name_input], label= name_input)
-    plt.title(name_input)
-    plt.legend()
-    plt.show()
 
 
 def saturation_frequency(lu_list_list, scales, path_results=None):
-    colours = ["#4694a7", "#EE442F"]
     
+    #colours associated with scales "Senegal" and "Groundnut basin"
+    colours = ["#4694a7", "#EE442F"]
+
+    #Generating the figure
     fig, ax = plt.subplots(figsize =(9, 2))
     for k, (lu_list, scale) in enumerate(zip(lu_list_list, scales)):
         intensification_df = lu_list[7].copy()
@@ -267,7 +209,19 @@ def saturation_frequency(lu_list_list, scales, path_results=None):
     plt.show()
 
 
-def mean_cf(lu_list_list, scales, path_results=None):
+
+def plot_input(input_df, name_inputs, scale):
+    year = list(set(input_df["year"]))
+    
+    for name_input in name_inputs:
+        plt.plot(year, input_df[name_input], label= name_input)
+    plt.title(name_input)
+    plt.legend()
+    plt.show()
+
+
+
+def rotation_frequency(lu_list_list, scales, path_results=None):
     fig, ax = plt.subplots(figsize=(9, 2))
     
     colours_light = ["#63ACBE", "#f48274"]
@@ -329,104 +283,14 @@ def mean_cf(lu_list_list, scales, path_results=None):
 
     plt.ylabel("rotation frequency")
     plt.xlabel("year")
-    plt.show()  
-
-
-
-def plot_3_inputs(inputs_df, path_results=None):
-    year = list(set(inputs_df["year"]))
-    fig, (ax1, ax2, ax3) = plt.subplots(nrows=3, ncols=1, 
-                                        figsize=(7,6), sharex=True)
-    
-    #demography
-    ax1.plot(year, inputs_df["pop_rur"], color="#359B73", linewidth=2,
-             label="rural population")
-    ax1.plot(year, inputs_df["pop_urb"], color="#F748A5", linewidth=2,
-             label="urban population")
-    ax1.set_ylabel('Demography (inhab)')
-    ax1.legend(loc="upper left")
-    #changing ticks
-    #ticks = ax.get_xticks()
-    #new_ticks = np.delete(ticks, np.where(ticks%10 != 0))
-    #ax.set_xticks(new_ticks, new_ticks, rotation=30)
-    
-    #livestock
-    ax2.plot(year, inputs_df["liv"], color="#d55e00", linewidth=2)
-    ax2.set_ylabel('Livestock (TLU)')
-
-    #cereal imports
-    ax3.plot(year, inputs_df["net_imp"], color="#3DB7E9", linewidth=2)
-    ax3.set_ylabel('Cereal imports (Tonnes)')
-    ax3.set_xlabel('Year')
-    
-    if path_results!=None:
-        save_path = path_results + "no_scatter.svg"
-        fig.savefig(save_path, bbox_inches='tight', format='svg')
-    
-    fig.set_dpi(600)
     plt.show()
 
 
 
-def yields(inputs_nat, inputs_reg, lu_list_nat, lu_list_reg, path_results=None):
-    colours_light = ["#63ACBE", "#f48274"]
-    colours_dark = ["#4694a7", "#EE442F"]
-    divergence = [0.2, -0.2]
-    
-    fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1, sharex=True, 
-                                   figsize=(7,4))
-    #yield
-    ax1.plot(inputs_nat["year"], inputs_nat["yield"].div(1000), color=colours_dark[0], linewidth=2,
-             label="Senegal")
-    ax1.plot(inputs_reg["year"], inputs_reg["yield"].div(1000), color=colours_dark[1], linewidth=2,
-             label="Groundnut bassin")
-    ax1.set_ylabel('Yield\n (tonnes/ha/year)')
-    ax1.legend(loc="upper left")
-    
-    #plot biom_prod
-    year = list(set(lu_list_nat[-2]["year"]))
-    for i, y in enumerate(year) :
-        if i!=0:
-            series = lu_list_nat[-2].iloc[i, 1:]
-                
-            cl = colours_light[0]
-            cd = colours_dark[0]
-                    
-            ax2.boxplot(series, positions=[y],
-                        patch_artist=True, notch=False,
-                        boxprops=dict(facecolor=cl, color=cl, linewidth=2),
-                        capprops=dict(color=cl),
-                        whiskerprops=dict(color=cl),
-                        flierprops=dict(markeredgecolor=cl,
-                                            markerfacecolor=cl,
-                                            marker="o",
-                                            alpha=0.5,
-                                            markersize=1.5,
-                                            markeredgewidth=0.2),
-                        showfliers=True,
-                        medianprops=dict(linewidth=2, color=cd))
-    ax2.plot(lu_list_reg[-2]["year"], lu_list_reg[-2].iloc[:, 1],
-             color = colours_dark[1])
-    ax2.set_ylabel('Biomass productivity\n (tonnes/ha/year)')
-    #changing ticks
-    ticks = ax2.get_xticks()
-    new_ticks = np.delete(ticks, np.where(ticks%10 != 0))
-    #new_ticks = np.delete(new_ticks, np.where(new_ticks%1 != 0))
-    ax2.set_xticks(new_ticks, new_ticks, rotation=30)
-    
-    if path_results!=None:
-        save_path = path_results + "no_scatter.svg"
-        fig.savefig(save_path, bbox_inches='tight', format='svg')
-    
-    fig.set_dpi(600)
-    plt.show()
-
-
-
-def plot_3_inputs_per_ha(inputs_nat, inputs_reg, 
-                         superficy_nat, superficy_reg, 
-                         lu_list_nat, lu_list_reg,
-                         path_results=None):
+def all_inputs(inputs_nat, inputs_reg, 
+               superficy_nat, superficy_reg, 
+               lu_list_nat, lu_list_reg,
+               path_results=None):
     fig, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(nrows=5, ncols=1, 
                                         figsize=(7,7),
                                         gridspec_kw={'height_ratios': [3,1,1,2,1]},
@@ -515,60 +379,112 @@ def plot_3_inputs_per_ha(inputs_nat, inputs_reg,
 
 
 
-def display_past(lu_list, inputs, params_list):
-
-    liv = inputs["liv"]
+def past_pressure(lu_list, inputs, params_list, path_results=None):
     years = list(set(inputs["year"]))
-    for simu in range(len(params_list)):
-        biom_conso = params_list[simu]["biom_conso_max"]
-        past = lu_list[1].iloc[simu + 1]
-        biom_prod = lu_list[8].iloc[simu + 1]
+    liv = inputs["liv"]    
+    past_df = lu_list[1].copy()
+    #changing column names to be more interpretable
+    past_df.columns = ["year"] +\
+        [f'{idx}' for idx in range(len(past_df.columns)-1)]
+    print(past_df)
+    
+    biom_prod_df = lu_list[8].copy()
+    #biom_prod_df.colums = list(past_df.columns)
+    biom_prod_df = biom_prod_df.set_axis(list(past_df.columns), axis=1)
+    
+    percentage_satisf = pd.DataFrame(columns=list(biom_prod_df.columns))
+    percentage_satisf["year"] = years
+    
+    for idx in range(len(params_list)):
+        biom_conso = params_list[idx]["biom_conso_max"]
+        past_series = past_df[f'{idx}']
 
-        biom_conso = past*biom_prod/3
+        biom_prod_series = biom_prod_df.loc[:,f'{idx}']
+        
+        prod_series = past_series*biom_prod_series/(3*liv) 
         #dry mass produced by pastoral land (only 1/3 of it is available for livestock consumption)
-        needed_biom_conso = max_biom_conso*1000*liv
-        #kg of dry matter per day per TLU
-        perc_satisf_conso = biom_conso/needed_biom_conso
-    
-    fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(7, 7), gridspec_kw={'height_ratios': [3, 1, 1]}) 
-    ax1.plot(year, past, label="pastural land", color="#139A43")
-    ax1.set_ylabel('pastural land (ha)')
-    
-    ax1_b = ax1.twinx()
-    ax1_b.plot(year, liv, label="livestock", color="#004E64", linestyle="dashed")
-    ax1_b.set_ylabel('livestock (eq TLU)')
-    h1, l1 = ax1.get_legend_handles_labels()
-    h2, l2 = ax1_b.get_legend_handles_labels()
-    ax1.legend(h1+h2, l1+l2, loc="lower right")
-    ax1.set_xlim(year[0],year[-1])
-    #♣ax1.tick_params(labelbottom=False)
-    
-    ax2.plot(year, perc_satisf_conso*100,
-             label="satisfied consumption (%)",
-             color="orange")
-    ax2.set_ylabel('satisfied consumption (%)')
-    xticks = ax2.get_xticks()
-    xticklabels = ["" if idx==7 else str(int(val)) for idx, val in enumerate(xticks)]
-    ax2.set_xticks(xticks)
-    ax2.set_xticklabels(xticklabels)
-    ax2.set_xlim(year[0],year[-1])
-    ax2.set_ylim(25,80)
+        
+        needs_series = biom_conso/2 #kg of dry matter per day per TLU
+        perc_satisf_conso = prod_series/needs_series
+        percentage_satisf[f"{idx}"] = perc_satisf_conso
+    print(percentage_satisf)
 
-    ax3_b = ax3.twinx()
-    ax3_b.plot(year, large_rum,
-             label="large ruminants",
-             color="#00A5CF",
-             linestyle="dashed")
-    ax3_b.plot(year, small_rum,
-             label="small ruminants",
-             color="#ef476f",
-             linestyle="dashed")
-    ax3_b.set_ylabel('livestock (eq TLU)')
-    ax3_b.legend(loc="upper right")
-    ax3.set_xlim(year[0],year[-1])
-    ax3.tick_params(left=False, labelleft=False)
-    
-    ax1.set_title('Evolution of pastoral lands')
-    fig.align_ylabels()
+    colours_light = ["#63ACBE", "#f48274"]
+    colours_dark = ["#4694a7", "#EE442F"]
+
+    fig, ax = plt.subplots(figsize=(9, 2))
+    for i, y in enumerate(years) :
+        if i!=0:
+            series = percentage_satisf.iloc[i, 1:]
+                
+            cl = colours_light[0]
+            cd = colours_dark[0]
+                    
+            ax.boxplot(series, positions=[y],
+                        patch_artist=True, notch=False,
+                        boxprops=dict(facecolor=cl, color=cl, linewidth=2),
+                        capprops=dict(color=cl),
+                        whiskerprops=dict(color=cl),
+                        flierprops=dict(markeredgecolor=cl,
+                                            markerfacecolor=cl,
+                                            marker="o",
+                                            alpha=0.5,
+                                            markersize=1.5,
+                                            markeredgewidth=0.2),
+                        showfliers=True,
+                        medianprops=dict(linewidth=2, color=cd))
+        
+    #changing ticks
+    ticks = ax.get_xticks()
+    new_ticks = np.delete(ticks, np.where(ticks%10 != 0))
+    #new_ticks = np.delete(new_ticks, np.where(new_ticks%1 != 0))
+    ax.set_xticks(new_ticks, new_ticks, rotation=30)
+    ax.set_xlim([1960,2021])
+    if path_results!=None:
+        save_path = path_results + "no_scatter.svg"
+        fig.savefig(save_path, bbox_inches='tight', format='svg')
+
     fig.set_dpi(600)
     plt.show()
+    # fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(7, 7), gridspec_kw={'height_ratios': [3, 1, 1]}) 
+    # ax1.plot(year, past, label="pastural land", color="#139A43")
+    # ax1.set_ylabel('pastural land (ha)')
+    
+    # ax1_b = ax1.twinx()
+    # ax1_b.plot(year, liv, label="livestock", color="#004E64", linestyle="dashed")
+    # ax1_b.set_ylabel('livestock (eq TLU)')
+    # h1, l1 = ax1.get_legend_handles_labels()
+    # h2, l2 = ax1_b.get_legend_handles_labels()
+    # ax1.legend(h1+h2, l1+l2, loc="lower right")
+    # ax1.set_xlim(year[0],year[-1])
+    # #♣ax1.tick_params(labelbottom=False)
+    
+    # ax2.plot(year, perc_satisf_conso*100,
+    #          label="satisfied consumption (%)",
+    #          color="orange")
+    # ax2.set_ylabel('satisfied consumption (%)')
+    # xticks = ax2.get_xticks()
+    # xticklabels = ["" if idx==7 else str(int(val)) for idx, val in enumerate(xticks)]
+    # ax2.set_xticks(xticks)
+    # ax2.set_xticklabels(xticklabels)
+    # ax2.set_xlim(year[0],year[-1])
+    # ax2.set_ylim(25,80)
+
+    # ax3_b = ax3.twinx()
+    # ax3_b.plot(year, large_rum,
+    #          label="large ruminants",
+    #          color="#00A5CF",
+    #          linestyle="dashed")
+    # ax3_b.plot(year, small_rum,
+    #          label="small ruminants",
+    #          color="#ef476f",
+    #          linestyle="dashed")
+    # ax3_b.set_ylabel('livestock (eq TLU)')
+    # ax3_b.legend(loc="upper right")
+    # ax3.set_xlim(year[0],year[-1])
+    # ax3.tick_params(left=False, labelleft=False)
+    
+    # ax1.set_title('Evolution of pastoral lands')
+    # fig.align_ylabels()
+    # fig.set_dpi(600)
+    # plt.show()

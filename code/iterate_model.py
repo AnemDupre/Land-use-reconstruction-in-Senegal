@@ -74,7 +74,7 @@ def generate_parameter_sets(numb, seed):
 
 
 def iterate_simulation(params_list, area, inputs,
-                       preservation, calculate_demand):
+                       calculate_demand):
     """
     Simulates the land use evolutions of the given parameters sets.
     Results are then extracted, and grouped by ouput type 
@@ -91,8 +91,6 @@ def iterate_simulation(params_list, area, inputs,
             pop_rur, pop_urb, liv, rain, 
             net_imp, yield
             optional: biom_prod.
-    preservation : BOOLEAN
-        Whether fuelwood extraction areas are protected or not.
     calculate_demand : BOOLEAN
         Whether we output land uses or the demand for lands.
 
@@ -117,7 +115,6 @@ def iterate_simulation(params_list, area, inputs,
     # launch simulations and extract land use outputs
     for point in params_list:
         land_use_model = model.LandUseModel(area, inputs, params=point,
-                                            preservation=preservation,
                                             calculate_demand=calculate_demand)
         land_use_model.iterate()
         crop_df = land_use_model.lu_memory[["year", "crop"]].rename(columns={'crop': 'crop'})
@@ -165,7 +162,7 @@ def iterate_simulation(params_list, area, inputs,
 
 
 def iterate(numb_samples, area, seed, inputs,
-            preservation=True, calculate_demand=False):
+            calculate_demand=False):
     """
     Generates the paramer sets samples and calculates associated outputs.
 
@@ -179,8 +176,6 @@ def iterate(numb_samples, area, seed, inputs,
         DESCRIPTION.
     inputs : TYPE
         DESCRIPTION.
-    preservation : TYPE, optional
-        DESCRIPTION. The default is True.
     calculate_demand : TYPE, optional
         DESCRIPTION. The default is False.
 
@@ -196,6 +191,6 @@ def iterate(numb_samples, area, seed, inputs,
     #generate parameter sets
     params_list = generate_parameter_sets(numb_samples, seed)
     #simulate land-use evolution
-    lu_list = iterate_simulation(params_list, area, inputs, preservation, calculate_demand)
+    lu_list = iterate_simulation(params_list, area, inputs, calculate_demand)
 
     return params_list, lu_list

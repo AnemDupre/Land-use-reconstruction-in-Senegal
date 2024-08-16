@@ -25,7 +25,7 @@ import sobol
 
 #%% National level
 
-#settings
+# Settings
 numb_samples = 10
 scale = "senegal"
 NAT_AREA = 19253000
@@ -34,25 +34,44 @@ path_validation = path_data + f"\\validation_data\\{scale}_lu.xlsx"
 
 #fetch inputs
 inputs_nat = fetch.df(path_inputs)
-
 #generate parameter samples and calculate model outputs
 params_list, lu_list_nat = iterate_model.iterate(numb_samples, NAT_AREA, 
                                                  seed, inputs_nat)
-[crop_df, past_df, crop_subs_df, crop_mark_df, fal_df, un_df, veg_df, intensification_df, biom_prod_df, sum_lu_df] = lu_list_nat
 
-#plotting results
+# Plotting
+#results
+plot.land_uses_boxplots(lu_list_nat, scale, NAT_AREA,
+                        path_results=path_results)
+plot.mean_stack_and_validation(lu_list_nat, scale,
+                               path_validation, NAT_AREA,
+                               path_results=path_results)
+#intensification proxys
 plot.saturation_frequency([lu_list_nat], [scale])
-plot.display_median_stack_validation(lu_list_nat, scale, path_validation, NAT_AREA, path_results=path_results + "medians_")
-plot.land_uses_boxplots(lu_list_nat, scale, NAT_AREA, path_results=path_results + "stochastic_individual_")
-plot.mean_cf([lu_list_nat], [scale])
+plot.rotation_frequency([lu_list_nat], [scale])
 
+#%% faire une figure avec les proxys d'intensification
+
+import plot
+
+plot.past_pressure(lu_list_nat, inputs_nat, params_list)
+
+#%%
+import sobol
+
+import timeit
+start = timeit.timeit()
+
+# Sensitivity analysis
 sobol.test_param_sensitivity(NAT_AREA, inputs_nat, 10000)
 #maybe try 100 000 if 10 000 still doesn't work
+
+end = timeit.timeit()
+print("Completion time :", end - start)
 
 #%% Groundnut basin scale
 
 #settings
-numb_samples = 1000
+numb_samples = 10
 scale = "groundnut"
 GROUNDNUT_AREA = 3496200
 path_inputs = path_data + f"\\inputs\\{scale}_inputs.xlsx"
@@ -66,15 +85,15 @@ inputs_reg["yield"] = inputs_reg["yield"].apply(lambda x: x*2)
 #groundnutbassin_inputs.drop("biom_prod", axis=1, inplace=True)
 
 params_list, lu_list_reg = iterate_model.iterate(numb_samples, GROUNDNUT_AREA, 
-                                                 seed, inputs_reg, preservation=False, 
+                                                 seed, inputs_reg,
                                                  calculate_demand=True)
 
 # Plotting results
 plot.land_uses_boxplots(lu_list_reg, scale, GROUNDNUT_AREA, path_results=path_results + f"{scale}_medians_")
-plot.display_median_stack_validation(lu_list_reg, scale, path_validation, GROUNDNUT_AREA, path_results=path_results + f"{scale}_stochastic_individual_")
+plot.mean_stack_and_validation(lu_list_reg, scale, path_validation, GROUNDNUT_AREA, path_results=path_results + f"{scale}_stochastic_individual_")
 #plot.saturation_frequency([lu_list_nat, lu_list_reg], ["national", "groundnut bassin"])
 
 #%% plotting the inputs for both scales
 
-plot.plot_3_inputs_per_ha(inputs_nat, inputs_reg, NAT_AREA, 
-                          GROUNDNUT_AREA, lu_list_nat, lu_list_reg)
+plot.all_inputs(inputs_nat, inputs_reg, NAT_AREA, 
+                GROUNDNUT_AREA, lu_list_nat, lu_list_reg)

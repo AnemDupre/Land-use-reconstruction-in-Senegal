@@ -94,38 +94,43 @@ def test_param_sensitivity(area, inputs, numb_samples):
 
     #define parameter ranges
     problem = {
-        'num_vars': len(params),  # Number of parameters
+        'num_vars': 10,  # Number of parameters
         'names': list(params.keys()),  # Parameter names
         'bounds': list(params.values())  # Parameter ranges
     }
 
     #generate parameter samples
-    param_samples = saltelli.sample(problem, numb_samples)
+    param_samples = saltelli.sample(problem, numb_samples,
+                                    calc_second_order=False)
+    #generates a matrix with numb_samples * (num_vars + 2) rows
     #the number of samples must allow for convergence of Sobol indices
 
     #calculate model outputs for each parameter set sampled
     model_outputs = run_model_w_params(param_samples[0], area, inputs)
     for params_sample in param_samples[1:] :
         output = run_model_w_params(params_sample, area, inputs)
-        model_outputs = np.vstack([model_outputs, output])
+        model_outputs = np.hstack([model_outputs, output])
+    print(model_outputs.shape)
         #concatenate results
 
     #perform sensitivity analysis using Sobol method
-    sobol_indices = sobol.analyze(problem, model_outputs, print_to_console=True)
+    sobol_indices = sobol.analyze(problem, model_outputs,
+                                  calc_second_order=False,
+                                  print_to_console=True)
 
-    #print sensitivity indices
-    print("Sobol First Order Indices:")
-    for i, name in enumerate(problem['names']):
-        print(f"{name}: {sobol_indices['S1'][i]}")
+    # #print sensitivity indices
+    # print("\nSobol First Order Indices:")
+    # for i, name in enumerate(problem['names']):
+    #     print(f"{name}: {sobol_indices['S1'][i]}")
 
-    print("\nSobol First Order Indices confidence:")
-    for i, name in enumerate(problem["names"]):
-        print(f"{name}: {sobol_indices['S1_conf'][i]}") #bootstrap confidence intervals
+    # print("\nSobol First Order Indices confidence:")
+    # for i, name in enumerate(problem["names"]):
+    #     print(f"{name}: {sobol_indices['S1_conf'][i]}") #bootstrap confidence intervals
 
-    print("\nSobol Total Order Indices:")
-    for i, name in enumerate(problem['names']):
-        print(f"{name}: {sobol_indices['ST'][i]}")
+    # print("\nSobol Total Order Indices:")
+    # for i, name in enumerate(problem['names']):
+    #     print(f"{name}: {sobol_indices['ST'][i]}")
 
-    print("\nSobol Total Order Indices confidence:")
-    for i, name in enumerate(problem['names']):
-        print(f"{name}: {sobol_indices['ST_conf'][i]}") #bootstrap confidence intervals
+    # print("\nSobol Total Order Indices confidence:")
+    # for i, name in enumerate(problem['names']):
+    #     print(f"{name}: {sobol_indices['ST_conf'][i]}") #bootstrap confidence intervals

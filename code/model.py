@@ -19,12 +19,11 @@ import pandas as pd
 
 
 class LandUseModel:
-    def __init__(self, area, exogenous_df, preservation=True,
+    def __init__(self, area, exogenous_df,
                  calculate_demand=False, params=None):
         #initializing the land use calculator with area and data from the frst year
         self.land_use_calculator = LandUseCalculator(area, exogenous_df.iloc[0], params=params)
         self.exogenous_df = exogenous_df
-        self.preservation = preservation #if fuelwood extraction areas are protected
         self.calculate_demand = calculate_demand
 
         #initilizing dataframes to keep results from each step
@@ -61,8 +60,7 @@ class LandUseModel:
         """
         for index, row in self.exogenous_df.iterrows():
             #calculating land use
-            self.land_use_calculator.calculate_land_use(row, self.preservation,
-                                                        self.calculate_demand)
+            self.land_use_calculator.calculate_land_use(row, self.calculate_demand)
 
             #saving land use results
             lu_state = pd.DataFrame({"year": [row["year"]],
@@ -227,11 +225,11 @@ class LandUseCalculator:
         self.land_d = self.crop_d - self.prev_crop + self.past_d[1] - self.prev_past
         self.land_d_no_fal = (self.crop_subs + self.crop_mark) -\
             (self.prev_crop_subs + self.prev_crop_mark) +\
-                self.past_d[1] - self.prev_past
+                self.past_d[0] - self.prev_past
 
 
 
-    def calculate_land_use(self, exogenous, preservation, calculate_demand):
+    def calculate_land_use(self, exogenous, calculate_demand):
         """
         Calculates land use, that is to say the
         quantity of land dedicated to each use
@@ -251,97 +249,65 @@ class LandUseCalculator:
         #calculating demand
         self.calculate_demand(exogenous)
 
-        #calculating land use
-        if self.prev_veg + self.prev_un - self.land_d > self.veg_d :
-            #there is enough space for everything : expansion phase
-            self.intensification = 0
-            if self.prev_un - self.land_d < 0 :
-                #there is a need for deforestation
-                self.prev_veg -= self.land_d - self.prev_un
-            self.prev_crop = self.crop_d
-            self.prev_past = self.past_d[1] #we use the highest biomass consomation
-            self.prev_fal = self.fal_d
-            if calculate_demand:
-                self.prev_fal=0
+        if calculate_demand:
+            #we only calculate the demand for pastoral lands, market and subsistence croplands
+            self.prev_fal = 0
+            self.prev_past = self.liv*self.biom_conso_min/self.biom_prod
+            self.prev_veg = 0
+            self.prev_un = 0
+            self.prev_crop_subs = self.crop_subs
+            self.prev_crop_mark = self.crop_mark
 
-        else :
-            #there are conflicts in land use : intensification phase
-            self.intensification = 1
-            min_past = self.liv*self.biom_conso_min/self.biom_prod
-            #the minimal amount of land necessary for pasture
+        else:
+            #calculating land use
+            if self.prev_veg + self.prev_un - self.land_d > self.veg_d :
+                #there is enough space for everything : expansion phase
+                self.intensification = 0
+                if self.prev_un - self.land_d < 0 :
+                    #there is a need for deforestation
+                    self.prev_veg -= self.land_d - self.prev_un
+                self.prev_crop = self.crop_d
+                self.prev_past = self.past_d[1] #we use the highest biomass consomation
+                self.prev_fal = self.fal_d
+                if calculate_demand:
+                    self.prev_fal=0
+    
+            else :
+                #there are conflicts in land use : intensification phase
+                self.intensification = 1
+                #min_past = self.liv*self.biom_conso_min/self.biom_prod
+                #the minimal amount of land necessary for pasture
 
-            if calculate_demand:
-                #we only calculate the demand for pastoral lands, market and subsistence croplands
 
-                self.prev_fal = 0
-                self.prev_past = min_past
-                self.prev_veg = max(0, self.area - self.prev_fal -\
-                                    self.prev_crop_subs - self.prev_crop_mark -\
-                                        self.prev_past)
-
-            else:
-                if preservation:
-                    self.prev_veg = min(self.veg_d, self.prev_veg)
-
-                    #using delta fal
-                    self.prev_fal += ((self.crop_subs + self.crop_mark) -\
-                                      (self.prev_crop_subs + self.prev_crop_mark))*self.cf_init -\
-                                    (self.land_d_no_fal-self.prev_un)*\
-                                        (1-self.crop_past_ratio)
-                    self.prev_fal = min((self.crop_subs + self.crop_mark)*self.cf_init,
-                                        self.prev_fal)
-                    #fal can't be bigger than cf_init * (crop_mark + crop_subs)
-                    self.prev_fal = max(self.prev_fal,
-                                        0)
-                    #fal can't be negative
-
+    
+                #using delta fal
+                self.prev_fal += ((self.crop_subs + self.crop_mark) -\
+                                          (self.prev_crop_subs + self.prev_crop_mark))*self.cf_init -\
+                                        (self.fal_d - self.prev_fal + self.land_d_no_fal-self.prev_un)*\
+                                            (1-self.crop_past_ratio)
+                self.prev_fal = min((self.crop_subs + self.crop_mark)*self.cf_init,
+                                    self.prev_fal)
+                #fal can't be bigger than cf_init * (crop_mark + crop_subs)
+                self.prev_fal = max(self.prev_fal,
+                                    0)
+                #fal can't be negative
+                if self.prev_fal<self.cf_inf *(self.crop_subs +self.crop_mark):
                     #treshold on fal, default threshold is 0
-                    if self.prev_fal<self.cf_inf *(self.crop_subs +self.crop_mark):
-                        self.prev_fal = self.cf_inf *(self.crop_subs + self.crop_mark)
+                    self.prev_fal = self.cf_inf *(self.crop_subs + self.crop_mark)
+                prev_veg = min(self.veg_d,
+                               self.prev_veg)
+                self.prev_past = self.area - prev_veg - self.prev_fal -\
+                                         self.crop_subs - self.crop_mark
+                if self.prev_past > (self.liv*self.biom_conso_max)/self.biom_prod:
+                    rest = self.prev_past - (self.liv*self.biom_conso_max)/self.biom_prod
+                    self.prev_veg = min(self.prev_veg,
+                                        self.veg_d + rest)
+                    self.prev_past = (self.liv*self.biom_conso_max)/self.biom_prod
+            self.prev_crop_subs = self.crop_subs # demand
+            self.prev_crop_mark = self.crop_mark
+            self.prev_crop = self.prev_crop_subs + self.prev_crop_mark + self.prev_fal
 
-                    self.prev_past = max(self.area - self.prev_veg - self.prev_fal -\
-                                         self.crop_subs - self.crop_mark,
-                                         self.liv*self.biom_conso_min/self.biom_prod)
-
-                    if self.prev_past > self.liv*self.biom_conso_max/self.biom_prod:
-                        #if past is biger than what is need for pasture, the excess land is left fallowing
-                        self.prev_fal += self.prev_past - self.liv*self.biom_conso_max/self.biom_prod
-                        self.prev_past = self.liv*self.biom_conso_max/self.biom_prod
-
-
-                else: #fuelwood extraction areas are not protected
-
-                    #using delta fal
-                    self.prev_fal += ((self.crop_subs + self.crop_mark) -\
-                                      (self.prev_crop_subs + self.prev_crop_mark))*self.cf_init -\
-                                    (self.fal_d - self.prev_fal + self.land_d_no_fal-self.prev_un)*\
-                                        (1-self.crop_past_ratio)
-                    self.prev_fal = max(self.prev_fal, self.area -\
-                                        self.crop_subs - self.crop_mark - min_past,
-                                        0)
-                    #fal can't be negative
-                    self.prev_fal = min((self.crop_subs +self.crop_mark)*self.cf_init,
-                                        self.prev_fal)
-                    #fal can't be bigger than cf_init * (crop_mark + crop_subs)
-                    #treshold on fal, default threshold is 0
-                    if self.prev_fal<self.cf_inf *(self.crop_subs +self.crop_mark):
-                        self.prev_fal = self.cf_inf *(self.crop_subs + self.crop_mark)
-
-                    self.prev_past = max(min(self.area -\
-                                             self.prev_fal - self.prev_crop_subs -\
-                                                 self.prev_crop_mark,
-                                             self.liv*self.biom_conso_min/self.biom_prod),
-                                         0)
-                    self.prev_veg = max(self.area -\
-                                            (self.prev_fal + self.prev_crop_subs +\
-                                             self.prev_crop_mark + self.prev_past),
-                                        0)
-
-        self.prev_crop_subs = self.crop_subs # demand
-        self.prev_crop_mark = self.crop_mark
-        self.prev_crop = self.prev_crop_subs + self.prev_crop_mark + self.prev_fal
-
-        #having calculated all land uses, the only thing left is unused land
-        self.prev_un = max(self.area - self.prev_past - self.prev_veg - self.prev_crop, 0)
-        #un can only take positive values
-   
+            #having calculated all land uses, the only thing left is unused land
+            self.prev_un = max(self.area - self.prev_past - self.prev_veg - self.prev_crop,
+                               0)
+            #un can only take positive values

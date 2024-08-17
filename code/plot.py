@@ -292,9 +292,9 @@ def all_inputs(inputs_nat, inputs_reg,
                lu_list_nat, lu_list_reg,
                path_results=None):
     fig, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(nrows=5, ncols=1, 
-                                        figsize=(7,7),
-                                        gridspec_kw={'height_ratios': [3,1,1,2,1]},
-                                        sharex=True)
+                                    figsize=(7,7),
+                                    gridspec_kw={'height_ratios': [3,1,1,2,1]},
+                                    sharex=True)
     superficies = [superficy_nat, superficy_reg]
     
     
@@ -446,45 +446,135 @@ def past_pressure(lu_list, inputs, params_list, path_results=None):
 
     fig.set_dpi(600)
     plt.show()
-    # fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(7, 7), gridspec_kw={'height_ratios': [3, 1, 1]}) 
-    # ax1.plot(year, past, label="pastural land", color="#139A43")
-    # ax1.set_ylabel('pastural land (ha)')
-    
-    # ax1_b = ax1.twinx()
-    # ax1_b.plot(year, liv, label="livestock", color="#004E64", linestyle="dashed")
-    # ax1_b.set_ylabel('livestock (eq TLU)')
-    # h1, l1 = ax1.get_legend_handles_labels()
-    # h2, l2 = ax1_b.get_legend_handles_labels()
-    # ax1.legend(h1+h2, l1+l2, loc="lower right")
-    # ax1.set_xlim(year[0],year[-1])
-    # #♣ax1.tick_params(labelbottom=False)
-    
-    # ax2.plot(year, perc_satisf_conso*100,
-    #          label="satisfied consumption (%)",
-    #          color="orange")
-    # ax2.set_ylabel('satisfied consumption (%)')
-    # xticks = ax2.get_xticks()
-    # xticklabels = ["" if idx==7 else str(int(val)) for idx, val in enumerate(xticks)]
-    # ax2.set_xticks(xticks)
-    # ax2.set_xticklabels(xticklabels)
-    # ax2.set_xlim(year[0],year[-1])
-    # ax2.set_ylim(25,80)
 
-    # ax3_b = ax3.twinx()
-    # ax3_b.plot(year, large_rum,
-    #          label="large ruminants",
-    #          color="#00A5CF",
-    #          linestyle="dashed")
-    # ax3_b.plot(year, small_rum,
-    #          label="small ruminants",
-    #          color="#ef476f",
-    #          linestyle="dashed")
-    # ax3_b.set_ylabel('livestock (eq TLU)')
-    # ax3_b.legend(loc="upper right")
-    # ax3.set_xlim(year[0],year[-1])
-    # ax3.tick_params(left=False, labelleft=False)
+
+
+def intensification_proxys(lu_list, inputs, params_list, path_results = None):
     
-    # ax1.set_title('Evolution of pastoral lands')
-    # fig.align_ylabels()
-    # fig.set_dpi(600)
-    # plt.show()
+    fig, (ax1, ax2, ax3) = plt.subplots(nrows=3, ncols=1, 
+                                        figsize=(9,6),
+                                        sharex=True)
+    
+    #colours associated with scales "Senegal" and "Groundnut basin"
+    light = "#63ACBE"
+    dark = "#4694a7"
+    #Generating the figure
+    
+    # Territory saturation
+
+    intensification_df = lu_list[7].copy()
+    year = list(set(intensification_df["year"]))
+    year = [int(y) for y in year]
+    # Calculating normalized medians
+    for idx, column in enumerate(intensification_df.columns[1:]):
+        intensification_df.columns.values[idx+1] = f"{idx}"
+        
+    #intensification_df["mean"] = intensification_df.sum(axis=0)
+    intensification_df['mean'] = intensification_df.drop(intensification_df.columns[0], axis=1).sum(axis=1)
+    intensification_df["mean"] = intensification_df["mean"].div(len(intensification_df.columns)-2)
+        
+    ax1.plot(year, intensification_df["mean"].tolist(),
+             color=dark)
+    ax1.set_ylabel("saturation\nfrequency")
+    ax1.set_xlim([1960,2021])
+
+    new_ticks = np.array([0.0, 0.5, 1.0])
+    ax1.set_yticks(new_ticks, new_ticks)
+
+    # Cultivation frequency
+    
+    subs_df = lu_list[2].copy()
+    mark_df = lu_list[3].copy()
+    fal_df = lu_list[4].copy()
+        
+    # calculating the cultivation frequency
+    cf_df = pd.DataFrame(columns=["year"])
+    cf_df["year"] = subs_df["year"]
+        
+    for idx in range(len(subs_df.columns)-1):
+        cf_df[f"simu_{idx}"] = fal_df.iloc[:, idx+1]
+        series_sum = subs_df.iloc[:, idx+1] + mark_df.iloc[:, idx+1]
+        cf_df[f"simu_{idx}"] = cf_df[f"simu_{idx}"].div(series_sum)
+    cf_df.dropna(axis=1, inplace=True)
+
+    for i, y in enumerate(year) :
+        if i!=0:
+            series = cf_df.iloc[i, 1:]
+            ax2.boxplot(series, positions=[y],
+                        patch_artist=True, notch=False,
+                        boxprops=dict(facecolor=light, color=light, linewidth=2),
+                        capprops=dict(color=light),
+                        whiskerprops=dict(color=light),
+                        flierprops=dict(markeredgecolor=light,
+                                           markerfacecolor=light,
+                                           marker="o",
+                                           alpha=0.5,
+                                           markersize=1.5,
+                                           markeredgewidth=0.2),
+                        showfliers=True,
+                        medianprops=dict(linewidth=2, color=dark))
+
+    ax2.set_ylabel("rotation\nfrequency")
+    ax2.set_xlim([1960,2021])
+
+    
+    years = list(set(inputs["year"]))
+    liv = inputs["liv"]    
+    past_df = lu_list[1].copy()
+    #changing column names to be more interpretable
+    past_df.columns = ["year"] +\
+        [f'{idx}' for idx in range(len(past_df.columns)-1)]
+    
+    biom_prod_df = lu_list[8].copy()
+    #biom_prod_df.colums = list(past_df.columns)
+    biom_prod_df = biom_prod_df.set_axis(list(past_df.columns), axis=1)
+    
+    percentage_satisf = pd.DataFrame(columns=list(biom_prod_df.columns))
+    percentage_satisf["year"] = years
+    
+    for idx in range(len(params_list)):
+        biom_conso = params_list[idx]["biom_conso_max"]
+        past_series = past_df[f'{idx}']
+
+        biom_prod_series = biom_prod_df.loc[:,f'{idx}']
+        
+        prod_series = past_series*biom_prod_series/(3*liv) 
+        #dry mass produced by pastoral land (only 1/3 of it is available for livestock consumption)
+        
+        needs_series = biom_conso/2 #kg of dry matter per day per TLU
+        perc_satisf_conso = prod_series/needs_series
+        percentage_satisf[f"{idx}"] = perc_satisf_conso
+
+    for i, y in enumerate(years) :
+        if i!=0:
+            series = percentage_satisf.iloc[i, 1:]
+                    
+            ax3.boxplot(series, positions=[y],
+                        patch_artist=True, notch=False,
+                        boxprops=dict(facecolor=light, color=light, linewidth=2),
+                        capprops=dict(color=light),
+                        whiskerprops=dict(color=light),
+                        flierprops=dict(markeredgecolor=light,
+                                            markerfacecolor=light,
+                                            marker="o",
+                                            alpha=0.5,
+                                            markersize=1.5,
+                                            markeredgewidth=0.2),
+                        showfliers=True,
+                        medianprops=dict(linewidth=2, color=dark))
+    ax3.set_ylabel("satisfied\nconsumption (%)")
+    #changing ticks
+    ticks = ax3.get_xticks()
+    new_ticks = np.delete(ticks, np.where(ticks%10 != 0))
+    ax3.set_xticks(new_ticks, new_ticks, rotation=30)
+    ax3.set_xlim([1960,2021])
+    ax3.set_xlabel("year")
+    
+    fig.align_ylabels()
+    
+    if path_results!=None:
+        save_path = path_results + "no_scatter.svg"
+        fig.savefig(save_path, bbox_inches='tight', format='svg')
+
+    fig.set_dpi(600)
+    plt.show()

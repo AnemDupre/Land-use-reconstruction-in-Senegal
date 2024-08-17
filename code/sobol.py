@@ -110,27 +110,9 @@ def test_param_sensitivity(area, inputs, numb_samples):
     for params_sample in param_samples[1:] :
         output = run_model_w_params(params_sample, area, inputs)
         model_outputs = np.hstack([model_outputs, output])
-    print(model_outputs.shape)
         #concatenate results
 
     #perform sensitivity analysis using Sobol method
-    sobol_indices = sobol.analyze(problem, model_outputs,
-                                  calc_second_order=False,
-                                  print_to_console=True)
-
-    # #print sensitivity indices
-    # print("\nSobol First Order Indices:")
-    # for i, name in enumerate(problem['names']):
-    #     print(f"{name}: {sobol_indices['S1'][i]}")
-
-    # print("\nSobol First Order Indices confidence:")
-    # for i, name in enumerate(problem["names"]):
-    #     print(f"{name}: {sobol_indices['S1_conf'][i]}") #bootstrap confidence intervals
-
-    # print("\nSobol Total Order Indices:")
-    # for i, name in enumerate(problem['names']):
-    #     print(f"{name}: {sobol_indices['ST'][i]}")
-
-    # print("\nSobol Total Order Indices confidence:")
-    # for i, name in enumerate(problem['names']):
-    #     print(f"{name}: {sobol_indices['ST_conf'][i]}") #bootstrap confidence intervals
+    sobol.analyze(problem, model_outputs,
+                  calc_second_order=False,
+                  print_to_console=True)

@@ -48,25 +48,27 @@ plot.mean_stack_and_validation(lu_list_nat, scale,
 #intensification proxys
 plot.saturation_frequency([lu_list_nat], [scale])
 plot.rotation_frequency([lu_list_nat], [scale])
+plot.past_pressure(lu_list_nat, inputs_nat, params_list)
 
 #%% faire une figure avec les proxys d'intensification
 
 import plot
-
-plot.past_pressure(lu_list_nat, inputs_nat, params_list)
+plot.intensification_proxys(lu_list_nat, inputs_nat, params_list)
 
 #%%
 import sobol
+import time
 
-import timeit
-start = timeit.timeit()
+start = time.time()
 
 # Sensitivity analysis
-sobol.test_param_sensitivity(NAT_AREA, inputs_nat, 10000)
+sobol.test_param_sensitivity(NAT_AREA, inputs_nat, 100000)
 #maybe try 100 000 if 10 000 still doesn't work
 
-end = timeit.timeit()
-print("Completion time :", end - start)
+end = time.time()
+print("\nCompletion time :",
+      end - start,
+      " seconds")
 
 #%% Groundnut basin scale
 

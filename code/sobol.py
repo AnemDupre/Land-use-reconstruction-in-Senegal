@@ -7,6 +7,7 @@ Created on Wed Aug 14 09:30:31 2024
 
 from SALib.sample import saltelli
 from SALib.analyze import sobol
+from SALib.analyze import delta
 import numpy as np
 import scipy
 import model
@@ -104,15 +105,35 @@ def test_param_sensitivity(area, inputs, numb_samples):
                                     calc_second_order=False)
     #generates a matrix with numb_samples * (num_vars + 2) rows
     #the number of samples must allow for convergence of Sobol indices
-
+    print(param_samples.shape)
     #calculate model outputs for each parameter set sampled
     model_outputs = run_model_w_params(param_samples[0], area, inputs)
     for params_sample in param_samples[1:] :
         output = run_model_w_params(params_sample, area, inputs)
-        model_outputs = np.hstack([model_outputs, output])
+        model_outputs = np.vstack([model_outputs, output])
         #concatenate results
-
+    print(model_outputs.shape)
     #perform sensitivity analysis using Sobol method
-    sobol.analyze(problem, model_outputs,
-                  calc_second_order=False,
-                  print_to_console=True)
+    #sobol.analyze(problem, model_outputs,
+    #              calc_second_order=False,
+    #              print_to_console=True)
+
+    #delta.analyze(problem,
+    #              param_samples,
+    #              model_outputs,
+    #              print_to_console=True,
+    #              method="delta")
+
+    # Perform Delta analysis for each output dimension
+    delta_results = []
+    for i in range(model_outputs.shape[1]):
+        result = delta.analyze(problem,
+                           param_samples,
+                           model_outputs[:, i],  # Analyzing each output dimension separately
+                           print_to_console=True,
+                           method="all")
+        delta_results.append(result)
+
+
+    return delta_results
+    

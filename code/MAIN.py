@@ -46,13 +46,6 @@ plot.mean_stack_and_validation(lu_list_nat, scale,
                                path_validation, NAT_AREA,
                                path_results=path_results)
 #intensification proxys
-plot.saturation_frequency([lu_list_nat], [scale])
-plot.rotation_frequency([lu_list_nat], [scale])
-plot.past_pressure(lu_list_nat, inputs_nat, params_list)
-
-#%% faire une figure avec les proxys d'intensification
-
-import plot
 plot.intensification_proxys(lu_list_nat, inputs_nat, params_list)
 
 #%%
@@ -62,8 +55,9 @@ import time
 start = time.time()
 
 # Sensitivity analysis
-sobol.test_param_sensitivity(NAT_AREA, inputs_nat, 100000)
+sensitivity = sobol.test_param_sensitivity(NAT_AREA, inputs_nat, 1000)
 #maybe try 100 000 if 10 000 still doesn't work
+plot.sensitivity_heatmap(sensitivity)
 
 end = time.time()
 print("\nCompletion time :",
@@ -97,5 +91,6 @@ plot.mean_stack_and_validation(lu_list_reg, scale, path_validation, GROUNDNUT_AR
 
 #%% plotting the inputs for both scales
 
-plot.all_inputs(inputs_nat, inputs_reg, NAT_AREA, 
-                GROUNDNUT_AREA, lu_list_nat, lu_list_reg)
+plot.all_inputs([inputs_nat, inputs_reg],
+                [NAT_AREA, GROUNDNUT_AREA],
+                [lu_list_nat, lu_list_reg])

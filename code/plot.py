@@ -489,7 +489,7 @@ def create_custom_cmap(threshold, low_color, mid_color, high_color):
 
 
 
-def sensitivity_heatmap(delta_results):
+def sensitivity_heatmap(delta_results, path_results=None):
     output_items = ["past", "crop_subs", "crop_mark",
                     "fal", "un", "veg", "mean"]
     #get delta values
@@ -547,4 +547,10 @@ def sensitivity_heatmap(delta_results):
     plt.xlabel('Output Dimensions')
     plt.ylabel('Parameters')
     fig.set_dpi(600)
+
+    #saving the figure
+    if path_results is not None:
+        save_path = path_results + "no_scatter.svg"
+        fig.savefig(save_path, bbox_inches='tight', format='svg')
+
     plt.show()

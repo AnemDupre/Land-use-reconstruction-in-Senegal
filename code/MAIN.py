@@ -55,7 +55,7 @@ import time
 start = time.time()
 
 # Sensitivity analysis
-sensitivity = sobol.test_param_sensitivity(NAT_AREA, inputs_nat, 1000)
+sensitivity = sobol.test_param_sensitivity(NAT_AREA, inputs_nat, 10000)
 #maybe try 100 000 if 10 000 still doesn't work
 plot.sensitivity_heatmap(sensitivity)
 

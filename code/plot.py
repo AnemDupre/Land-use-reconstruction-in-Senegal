@@ -449,7 +449,7 @@ def intensification_proxys(lu_list, inputs, params_list, path_results = None):
 
     #saving the figure
     if path_results is not None:
-        save_path = path_results + "no_scatter.svg"
+        save_path = path_results + "intensification_proxys.svg"
         fig.savefig(save_path, bbox_inches='tight', format='svg')
 
     fig.set_dpi(600)
@@ -550,7 +550,7 @@ def sensitivity_heatmap(delta_results, path_results=None):
 
     #saving the figure
     if path_results is not None:
-        save_path = path_results + "no_scatter.svg"
+        save_path = path_results + "delta_indices_heatmap_2.svg"
         fig.savefig(save_path, bbox_inches='tight', format='svg')
 
     plt.show()

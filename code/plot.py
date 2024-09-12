@@ -95,10 +95,10 @@ def land_uses_boxplots(lu_list, scale, region_surface, path_results=None):
 
 
 
-def mean_stack_and_validation(lu_list, scale, path_validation,
+def median_stack_and_validation(lu_list, scale, path_validation,
                               superficy, path_results=None):
     """
-    Plots the means of land use outputs for categories
+    Plots the medians of land use outputs for categories
     "past", "crop_subs", "crop_mark", "fal", "un", "veg".
     Tappan data points are added for validation.
 
@@ -128,18 +128,18 @@ def mean_stack_and_validation(lu_list, scale, path_validation,
     categories = ["past", "crop_subs", "crop_mark",
                   "fal", "un", "veg"]
 
-    #calculating means
-    means_dataframe = pd.DataFrame(columns={"year": lu_list[0]["year"]})
+    #calculating medians
+    medians_dataframe = pd.DataFrame(columns={"year": lu_list[0]["year"]})
     for count, output in enumerate(lu_list[1:7]):
         kept_columns = output.columns[1:]
-        means = output[kept_columns].mean(axis=1)
-        means_dataframe[categories[count]] = means
+        medians = output[kept_columns].median(axis=1) 
+        medians_dataframe[categories[count]] = medians
 
     # Formatting the data for the stacked plot
     land_uses = []
     for category_idx in range(len(lu_list[1:7])):
         land_uses.append((categories[category_idx],
-                          means_dataframe[categories[category_idx]].tolist()))
+                          medians_dataframe[categories[category_idx]].tolist()))
     land_uses = dict(land_uses)
     desired_order_list = ["crop_subs", "crop_mark", "fal",
                           "un", "past", "veg"]
@@ -178,7 +178,7 @@ def mean_stack_and_validation(lu_list, scale, path_validation,
     plt.title(scale)
     #saving the figure
     if path_results is not None:
-        savepath = path_results + f"{scale}_mean_stack" + ".svg"
+        savepath = path_results + f"{scale}_median_stack" + ".svg"
         fig.savefig(savepath, bbox_inches='tight', format='svg')
     plt.show()
 
@@ -250,7 +250,7 @@ def all_inputs(inputs_list, superficies, lu_lists, path_results=None):
     years = list(set(lu_lists[0][-2]["year"]))
     for i, year in enumerate(years) :
 
-        series = lu_lists[0][-2].iloc[i, 1:]
+        series = lu_lists[0][-1].iloc[i, 1:]
 
         colour_light = colours_light[0]
         colour_dark = colours_dark[0]
@@ -272,7 +272,7 @@ def all_inputs(inputs_list, superficies, lu_lists, path_results=None):
                     medianprops={"linewidth":2,
                                  "color":colour_dark}
                     )
-    ax4.plot(lu_lists[1][-2]["year"], lu_lists[1][-2].iloc[:, 1],
+    ax4.plot(lu_lists[1][-1]["year"], lu_lists[1][-1].iloc[:, 1],
              color = colours_dark[1])
     ax4.set_ylabel('Rangeland productivity\n(tonnes/ha/year)')
     ax4.yaxis.set_label_position("right")
@@ -294,7 +294,7 @@ def all_inputs(inputs_list, superficies, lu_lists, path_results=None):
 
     #saving the figure
     if path_results is not None:
-        save_path = path_results + "no_scatter.svg"
+        save_path = path_results + "inputs.svg"
         fig.savefig(save_path, bbox_inches='tight', format='svg')
 
     fig.set_dpi(600)
@@ -551,6 +551,37 @@ def sensitivity_heatmap(delta_results, path_results=None):
     #saving the figure
     if path_results is not None:
         save_path = path_results + "delta_indices_heatmap_2.svg"
+        fig.savefig(save_path, bbox_inches='tight', format='svg')
+
+    plt.show()
+
+
+
+def rain(inputs_lists, path_results=None):
+    #colours for plotting
+    colours_dark = ["#4694a7", "#EE442F"]
+
+    #Generating the figure
+    fig, (ax1) = plt.subplots(nrows=1, ncols=1,
+                                        figsize=(9,2),
+                                        sharex=True)
+
+    #plotting rain
+    ax1.plot(inputs_lists[0]["year"], inputs_lists[0]["rain"],
+             color=colours_dark[0], linewidth=2,
+             label="Senegal")
+    ax1.plot(inputs_lists[1]["year"], inputs_lists[1]["rain"],
+             color=colours_dark[1], linewidth=2,
+             label="Groundnut bassin")
+    ax1.set_ylabel('Rain (mm/year)')
+    ax1.set_xlabel("Year")
+    ax1.legend(loc="upper left")
+
+    fig.set_dpi(600)
+
+    #saving the figure
+    if path_results is not None:
+        save_path = path_results + "rain.svg"
         fig.savefig(save_path, bbox_inches='tight', format='svg')
 
     plt.show()

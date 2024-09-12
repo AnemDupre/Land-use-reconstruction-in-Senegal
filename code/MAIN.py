@@ -14,7 +14,7 @@ PATH_DATA = PATH_REPOSITORY + "\\data\\"
 PATH_RESULTS = PATH_REPOSITORY + "\\results\\"
 #set seeds
 SEED = 42
-
+#imports
 import os
 os.chdir(PATH_CODE)
 import iterate_model
@@ -24,7 +24,7 @@ import sobol
 
 #%% National level
 
-# Settings
+#settings
 NUMB_SAMPLES_NAT = 1000
 SCALE = "senegal"
 NAT_AREA = 19253000
@@ -59,7 +59,7 @@ plot.sensitivity_heatmap(sensitivity, path_results=PATH_RESULTS)
 #%% Groundnut basin SCALE
 
 #settings
-NUMB_SAMPLES_REG = 10000
+NUMB_SAMPLES_REG = 1000
 SCALE = "groundnut"
 GROUNDNUT_AREA = 3496200
 path_inputs = PATH_DATA + f"\\inputs\\{SCALE}_inputs.xlsx"
@@ -79,14 +79,18 @@ params_list, lu_list_reg = iterate_model.iterate(NUMB_SAMPLES_REG, GROUNDNUT_ARE
 # Plotting results
 plot.land_uses_boxplots(lu_list_reg, SCALE, GROUNDNUT_AREA,
                         path_results=PATH_RESULTS +\
-                            f"{NUMB_SAMPLES_REG}_{SCALE}_medians_")
+                            f"{NUMB_SAMPLES_REG}_{SCALE}")
 plot.mean_stack_and_validation(lu_list_reg, SCALE,
                                path_validation, GROUNDNUT_AREA,
                                path_results=PATH_RESULTS +\
-                                   f"{SCALE}_stochastic_individual_")
+                                   f"{NUMB_SAMPLES_REG}_{SCALE}")
 
-#%% plotting the inputs for both SCALEs
-
+#%% plotting the inputs for both scales
+import plot
 plot.all_inputs([inputs_nat, inputs_reg],
                 [NAT_AREA, GROUNDNUT_AREA],
-                [lu_list_nat, lu_list_reg])
+                [lu_list_nat, lu_list_reg],
+                path_results=PATH_RESULTS)
+
+plot.rain([inputs_nat, inputs_reg],
+          path_results=PATH_RESULTS)

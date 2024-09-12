@@ -38,8 +38,7 @@ class LandUseModel:
                                                'un',
                                                'veg_d',
                                                'veg',
-                                               'intensification',
-                                               'sum_lu'])
+                                               'intensification'])
         #to keep track of inputs
         self.biom_prod_memory = pd.DataFrame(columns=["year",
                                                       "biom_prod"])
@@ -72,11 +71,7 @@ class LandUseModel:
                                      "un": [self.land_use_calculator.prev_un],
                                      "veg_d":[self.land_use_calculator.veg_d],
                                      "veg":[self.land_use_calculator.prev_veg],
-                                     "intensification": [self.land_use_calculator.intensification],
-                                     "sum_lu":[self.land_use_calculator.prev_crop +\
-                                               self.land_use_calculator.prev_past +\
-                                                   self.land_use_calculator.prev_un +\
-                                                       self.land_use_calculator.prev_veg]})
+                                     "intensification": [self.land_use_calculator.intensification]})
             self.lu_memory = pd.concat([self.lu_memory, lu_state])
 
             biom_prod_state = pd.DataFrame({"year": [row["year"]],
@@ -253,7 +248,7 @@ class LandUseCalculator:
             #we only calculate the demand for pastoral lands, market and subsistence croplands
             self.prev_fal = 0
             self.prev_past = self.liv*self.biom_conso_min/self.biom_prod
-            self.prev_veg = 0
+            self.prev_veg = self.veg_d
             self.prev_un = 0
             self.prev_crop_subs = self.crop_subs
             self.prev_crop_mark = self.crop_mark
@@ -296,8 +291,9 @@ class LandUseCalculator:
                     self.prev_fal = self.cf_inf *(self.crop_subs + self.crop_mark)
                 prev_veg = min(self.veg_d,
                                self.prev_veg)
-                self.prev_past = self.area - prev_veg - self.prev_fal -\
-                                         self.crop_subs - self.crop_mark
+                self.prev_past = max(self.area - prev_veg - self.prev_fal -\
+                                         self.crop_subs - self.crop_mark,
+                                         0)
                 if self.prev_past > (self.liv*self.biom_conso_max)/self.biom_prod:
                     rest = self.prev_past - (self.liv*self.biom_conso_max)/self.biom_prod
                     self.prev_veg = min(self.prev_veg,

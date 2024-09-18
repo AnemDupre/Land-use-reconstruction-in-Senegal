@@ -20,7 +20,7 @@ os.chdir(PATH_CODE)
 import iterate_model
 import plot
 import fetch
-import sobol
+import sensitivity
 
 #%% National level
 
@@ -41,7 +41,7 @@ params_list, lu_list_nat = iterate_model.iterate(NUMB_SAMPLES_NAT, NAT_AREA,
 #results
 plot.land_uses_boxplots(lu_list_nat, SCALE, NAT_AREA,
                         path_results=PATH_RESULTS+f"{NUMB_SAMPLES_NAT}")
-plot.mean_stack_and_validation(lu_list_nat, SCALE,
+plot.median_stack_and_validation(lu_list_nat, SCALE,
                                path_validation, NAT_AREA,
                                path_results=PATH_RESULTS+f"{NUMB_SAMPLES_NAT}")
 #intensification proxys
@@ -52,7 +52,7 @@ plot.intensification_proxys(lu_list_nat, inputs_nat,
 #%% Sensitivity analysis on parameter values
 
 #calculating Sobol first order indices and delta indices
-sensitivity = sobol.test_param_sensitivity(NAT_AREA, inputs_nat, 10000)
+sensitivity = sensitivity.test_param_sensitivity(NAT_AREA, inputs_nat, 10000)
 #plotting
 plot.sensitivity_heatmap(sensitivity, path_results=PATH_RESULTS)
 
@@ -80,13 +80,13 @@ params_list, lu_list_reg = iterate_model.iterate(NUMB_SAMPLES_REG, GROUNDNUT_ARE
 plot.land_uses_boxplots(lu_list_reg, SCALE, GROUNDNUT_AREA,
                         path_results=PATH_RESULTS +\
                             f"{NUMB_SAMPLES_REG}_{SCALE}")
-plot.mean_stack_and_validation(lu_list_reg, SCALE,
+plot.median_stack_and_validation(lu_list_reg, SCALE,
                                path_validation, GROUNDNUT_AREA,
                                path_results=PATH_RESULTS +\
                                    f"{NUMB_SAMPLES_REG}_{SCALE}")
 
 #%% plotting the inputs for both scales
-import plot
+
 plot.all_inputs([inputs_nat, inputs_reg],
                 [NAT_AREA, GROUNDNUT_AREA],
                 [lu_list_nat, lu_list_reg],

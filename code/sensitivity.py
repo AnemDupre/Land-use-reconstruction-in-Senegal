@@ -6,7 +6,6 @@ Created on Wed Aug 14 09:30:31 2024
 """
 
 from SALib.sample import saltelli
-from SALib.analyze import sobol
 from SALib.analyze import delta
 import numpy as np
 import scipy
@@ -113,18 +112,8 @@ def test_param_sensitivity(area, inputs, numb_samples):
         model_outputs = np.vstack([model_outputs, output])
         #concatenate results
     print(model_outputs.shape)
-    #perform sensitivity analysis using Sobol method
-    #sobol.analyze(problem, model_outputs,
-    #              calc_second_order=False,
-    #              print_to_console=True)
 
-    #delta.analyze(problem,
-    #              param_samples,
-    #              model_outputs,
-    #              print_to_console=True,
-    #              method="delta")
-
-    # Perform Delta analysis for each output dimension
+    # Calculate Delta indices and Sobol first order indices for each output dimension
     delta_results = []
     for i in range(model_outputs.shape[1]):
         result = delta.analyze(problem,

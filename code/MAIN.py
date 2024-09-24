@@ -25,9 +25,9 @@ import sensitivity
 #%% National level
 
 #settings
-NUMB_SAMPLES_NAT = 1000
+NUMB_SAMPLES_NAT = 1000 # number of parameter samples to draw
 SCALE = "senegal"
-NAT_AREA = 19253000
+NAT_AREA = 19253000 # in ha
 path_inputs = PATH_DATA + f"\\inputs\\{SCALE}_inputs.xlsx"
 path_validation = PATH_DATA + f"\\validation_data\\{SCALE}_lu.xlsx"
 
@@ -51,27 +51,23 @@ plot.intensification_proxys(lu_list_nat, inputs_nat,
 
 #%% Sensitivity analysis on parameter values
 
-#calculating Sobol first order indices and delta indices
+#calculating sobol first order indices and delta indices
 sensitivity = sensitivity.test_param_sensitivity(NAT_AREA, inputs_nat, 10000)
 #plotting
 plot.sensitivity_heatmap(sensitivity, path_results=PATH_RESULTS)
 
-#%% Groundnut basin SCALE
+#%% Groundnut basin scale
 
 #settings
-NUMB_SAMPLES_REG = 1000
+NUMB_SAMPLES_REG = 1000 # number of parameter samples to draw
 SCALE = "groundnut"
-GROUNDNUT_AREA = 3496200
+GROUNDNUT_AREA = 3496200 # in ha
 path_inputs = PATH_DATA + f"\\inputs\\{SCALE}_inputs.xlsx"
 path_validation = PATH_DATA + f"\\validation_data\\{SCALE}_lu.xlsx"
 
 #fetch inputs
 inputs_reg = fetch.df(path_inputs)
-inputs_reg["yield"] = inputs_reg["yield"].apply(lambda x: x*2)
-
-#get rid of the biom_prod column
-#groundnutbassin_inputs.drop("biom_prod", axis=1, inplace=True)
-
+#generate parameter samples and calculate model outputs
 params_list, lu_list_reg = iterate_model.iterate(NUMB_SAMPLES_REG, GROUNDNUT_AREA,
                                                  SEED, inputs_reg,
                                                  calculate_demand=True)

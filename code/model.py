@@ -107,7 +107,7 @@ class LandUseCalculator:
                 self.cf_inf = params["cf_inf"]
             else:
                 self.cf_inf = 0
-        else: #we take the parameters from the article
+        else: #we take the parameters from the original article
             self.biom_conso_min = 2.3
             #minimal biomass consumption during intensification, [biom_conso_min]=tonnes/equivalent TLU
             self.biom_conso_max = 4.6
@@ -115,11 +115,11 @@ class LandUseCalculator:
             self.food_conso = 360 #food consumption [food_conso]=kg/inhab
             self.cf_init = 2 #ideal cultivation frequency (dimensionless)
             self.fuel_conso_rur = 0.65 #rural fuel consumption [fuel_conso_rur]=m3/inhab
-            self.fuel_conso_urb = 0.83 #urban fuel consumption [fuel_conso_urb]=m3/inhab
+            self.fuel_conso_urb = 0.85 #urban fuel consumption [fuel_conso_urb]=m3/inhab
             self.veg_prod = 0.75 #productivity in fuelwood [veg_prod]=m3/ha
             self.a_biom_prod = 0.00375
             self.b_biom_prod = 0.15
-            self.crop_past_ratio = 2/3
+            self.crop_past_ratio = 0.4
         #consumption in biomass per head 
 
         #Initial exogeneous variables
